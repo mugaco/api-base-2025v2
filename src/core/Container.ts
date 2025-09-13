@@ -45,7 +45,7 @@ export class Container {
     }
 
     this.instance = createContainer({
-      injectionMode: InjectionMode.PROXY
+      injectionMode: InjectionMode.CLASSIC
     });
 
     this.initialized = true;  // Marcar como inicializado ANTES de registrar

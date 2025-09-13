@@ -4,7 +4,7 @@ import { TestService } from './TestService';
 export class TestController {
   private testService: TestService;
   
-  constructor({ testService }: { testService: TestService }) {
+  constructor( testService: TestService ) {
     this.testService = testService;
   }
 

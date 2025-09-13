@@ -2,8 +2,8 @@ import { TestRepository } from './TestRepository';
 
 export class TestService {
   private testRepository: TestRepository;
-  
-  constructor({ testRepository }: { testRepository: TestRepository }) {
+
+  constructor(testRepository: TestRepository) {
     this.testRepository = testRepository;
   }
 
