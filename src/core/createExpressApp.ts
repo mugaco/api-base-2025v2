@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { apiRoutes } from '../routes';
 import { Container } from './Container';
 import { ILoggerService } from './services/LoggerService';
+import { scopeMiddleware } from './middleware/scopeMiddleware';
 
 // Interfaces para errores personalizados
 interface ApiError extends Error {
@@ -27,6 +28,9 @@ export function createExpressApp(): Application {
   app.use(express.json({ limit: '1mb' }));
   app.use(cors());
   app.use(helmet());
+
+  // Middleware de scope de Awilix - IMPORTANTE: debe ir antes de las rutas
+  app.use(scopeMiddleware);
 
   // Ruta básica de health check
   app.get('/health', (_req: Request, res: Response) => {

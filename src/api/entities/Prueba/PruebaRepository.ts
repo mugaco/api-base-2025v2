@@ -1,7 +1,7 @@
 /**
  * Repositorio para Prueba
  */
-import { BaseRepository } from '@core/bases/BaseRepository';
+import { BaseRepository } from '@core/base/BaseRepository';
 import { IPrueba, PruebaModel } from './PruebaModel';
 
 /**

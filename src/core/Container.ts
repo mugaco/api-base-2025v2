@@ -1,9 +1,12 @@
 import { createContainer, asClass, asFunction, asValue, AwilixContainer, InjectionMode, Resolver } from 'awilix';
 
+// Tipo para constructores - mejora la seguridad de tipos
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Constructor<T = object> = new (...args: any[]) => T;
 
-// Tipos para el builder pattern
-interface ClassRegistration {
-  inject(injector: () => Record<string, unknown>): ClassRegistration;
+// Tipos para el builder pattern con genéricos mejorados
+interface ClassRegistration<T> {
+  inject(injector: () => Record<string, unknown>): ClassRegistration<T>;
   singleton(): AwilixContainer;
   scoped(): AwilixContainer;
   transient(): AwilixContainer;
@@ -16,8 +19,7 @@ interface FunctionRegistration {
 }
 
 interface RegistrationBuilder {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  asClass(ServiceClass: any): ClassRegistration;  // Necesario para Awilix DI - maneja inyección automática
+  asClass<T>(ServiceClass: Constructor<T>): ClassRegistration<T>;
   asFunction<T>(factory: (...args: unknown[]) => T): FunctionRegistration;
   asValue<T>(value: T): AwilixContainer;
 }
@@ -61,23 +63,25 @@ export class Container {
   }
 
   /**
+   * Crear un scope hijo para aislar dependencias por request
+   * Útil para tener instancias separadas por petición HTTP
+   */
+  static createScope(): AwilixContainer {
+    return this.get().createScope();
+  }
+
+  /**
    * Registrar un servicio con builder pattern
    */
   static register(name: string): RegistrationBuilder {
     const container = this.get();
     
     return {
-      /**
-       * Se usa 'any' aquí porque Awilix necesita flexibilidad para manejar constructores
-       * con diferentes firmas de parámetros. TypeScript no puede inferir los tipos de
-       * inyección de dependencias en tiempo de compilación. Awilix resuelve esto en runtime.
-       */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      asClass: (ServiceClass: any): ClassRegistration => {
+      asClass: <T>(ServiceClass: Constructor<T>): ClassRegistration<T> => {
         let injector: (() => Record<string, unknown>) | undefined;
-        
-        const registration: ClassRegistration = {
-          inject: (injectFn: () => Record<string, unknown>): ClassRegistration => {
+
+        const registration: ClassRegistration<T> = {
+          inject: (injectFn: () => Record<string, unknown>): ClassRegistration<T> => {
             injector = injectFn;
             return registration;
           },
@@ -106,7 +110,7 @@ export class Container {
         
         return registration;
       },
-      
+
       asFunction: <T>(factory: (...args: unknown[]) => T): FunctionRegistration => ({
         singleton: (): AwilixContainer => {
           container.register({ [name]: asFunction(factory).singleton() });

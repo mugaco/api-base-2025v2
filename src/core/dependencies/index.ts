@@ -4,7 +4,7 @@
  */
 import { AwilixContainer } from 'awilix';
 import { registerCoreDependencies } from './core.dependencies';
-import { registerEntitiesDependencies } from './entities.dependencies';
+import { registerEntitiesDependencies } from '@api/dependencies/entities.dependencies';
 import { registerMiddlewareDependencies } from './middleware.dependencies';
 import { registerExternalDependencies } from './external.dependencies';
 import { Container } from '@core/Container';

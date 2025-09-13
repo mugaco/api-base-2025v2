@@ -1,7 +1,7 @@
 /**
  * Servicio para Prueba
  */
-import { BaseService } from '@core/bases/BaseService';
+import { BaseService } from '@core/base/BaseService';
 import { PruebaRepository } from './PruebaRepository';
 import { IPrueba } from './PruebaModel';
 import { ICreatePrueba, IUpdatePrueba, IPruebaResponse } from './PruebaSchema';

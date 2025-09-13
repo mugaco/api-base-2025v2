@@ -1,7 +1,7 @@
 import { Document, FilterQuery, UpdateQuery } from 'mongoose';
-import { IPaginationParams } from '@core/bases/interfaces/PaginationParams.interface';
-import { IPaginatedResponse } from '@core/bases/interfaces/PaginatedResponse.interface';
-import { IQueryOptions } from '@core/bases/interfaces/QueryOptions.interface';
+import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interface';
+import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
+import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
 
 export interface IRepository<T extends Document> {
   findAll(filter?: FilterQuery<T>, options?: IQueryOptions): Promise<T[]>;

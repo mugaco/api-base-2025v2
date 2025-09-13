@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { IPaginationParams } from '@core/bases/interfaces/PaginationParams.interface';
-import { IQueryOptions } from '@core/bases/interfaces/QueryOptions.interface';
-import { IGetQueryParams } from '@core/bases/interfaces/GetQueryParams.interface';
-import { IPaginatedResponse } from '@core/bases/interfaces/PaginatedResponse.interface';
-import { IController } from '@core/bases/interfaces/controller.interface';
+import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interface';
+import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
+import { IGetQueryParams } from '@core/base/interfaces/GetQueryParams.interface';
+import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
+import { IController } from '@core/base/interfaces/controller.interface';
 
 /**
  * Interfaz que define los métodos básicos que debe tener un servicio para el BaseController

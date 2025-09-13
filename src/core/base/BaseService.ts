@@ -1,9 +1,9 @@
 import { Document, FilterQuery } from 'mongoose';
-import { IExtendedRepository } from '@core/bases/interfaces/repository.interface';
-import { IPaginationParams } from '@core/bases/interfaces/PaginationParams.interface';
-import { IPaginatedResponse } from '@core/bases/interfaces/PaginatedResponse.interface';
-import { IQueryOptions } from '@core/bases/interfaces/QueryOptions.interface';
-import { IService } from '@core/bases/interfaces/service.interface';
+import { IExtendedRepository } from '@core/base/interfaces/repository.interface';
+import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interface';
+import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
+import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
+import { IService } from '@core/base/interfaces/service.interface';
 
 /**
  * Clase base abstracta para servicios

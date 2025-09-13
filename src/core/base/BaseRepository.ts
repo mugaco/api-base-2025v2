@@ -1,9 +1,9 @@
 import { Document, Model, FilterQuery, UpdateQuery, Query } from 'mongoose';
-import { IExtendedRepository } from '@core/bases/interfaces/repository.interface';
-import { IPaginationParams } from '@core/bases/interfaces/PaginationParams.interface';
-import { IPaginatedResponse } from '@core/bases/interfaces/PaginatedResponse.interface';
-import { IQueryOptions } from '@core/bases/interfaces/QueryOptions.interface';
-import { MongoQueryBuilder } from '@core/queryBuilder/MongoQueryBuilder';
+import { IExtendedRepository } from '@core/base/interfaces/repository.interface';
+import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interface';
+import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
+import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
+import { MongoQueryBuilder } from '@core/base/queryBuilder/MongoQueryBuilder';
 import { ILoggerService } from '@core/services/LoggerService';
 
 import { Container } from '@core/Container';

@@ -26,7 +26,7 @@ export async function bootstrap(): Promise<Application> {
     await logger.initialize();
     
     // 3. Conectar a la base de datos
-    await connectDB();
+    await connectDB(logger);
     logger.info('Conexión a base de datos establecida');
     
     // // 4. Inicializar otros servicios críticos

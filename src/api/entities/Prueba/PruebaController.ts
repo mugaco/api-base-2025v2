@@ -2,7 +2,7 @@
  * Controlador para Prueba
  */
 import { Request } from 'express';
-import { BaseController } from '@core/bases/BaseController';
+import { BaseController } from '@core/base/BaseController';
 import { PruebaService } from './PruebaService';
 
 /**

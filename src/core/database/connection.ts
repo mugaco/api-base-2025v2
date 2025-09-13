@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { logger } from '@core/services/LoggerService/logger.base';
+import { ILoggerService } from '@core/services/LoggerService';
 import dotenv from 'dotenv';
 
 // Cargar variables de entorno
@@ -16,28 +16,28 @@ const options = {
 };
 
 // Conectar a MongoDB
-export const connectDB = async (): Promise<void> => {
+export const connectDB = async (logger: ILoggerService): Promise<void> => {
   try {
     // Mostrar la URL que se está utilizando (sin credenciales)
     const connectionString = MONGO_URI.replace(
       /mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/,
       'mongodb$1://*****:*****@'
     );
-    
+
     logger.info(`Intentando conectar a MongoDB: ${connectionString}`);
-    
+
     const connection = await mongoose.connect(MONGO_URI, options);
     logger.info(`MongoDB conectado: ${connection.connection.host}`);
-    
+
     // Manejadores de eventos de conexión
     mongoose.connection.on('error', (err) => {
       logger.error(`Error de conexión MongoDB: ${err}`);
     });
-    
+
     mongoose.connection.on('disconnected', () => {
       logger.warn('MongoDB desconectado');
     });
-    
+
     // Manejo de cierre de la aplicación
     process.on('SIGINT', async () => {
       await mongoose.connection.close();
