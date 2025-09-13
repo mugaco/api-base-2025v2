@@ -1,0 +1,54 @@
+# Definición de la red al inicio
+networks:
+  traefik-net:
+    external: true
+
+services:
+  dev-api-base:
+    container_name: dev-api-base
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    networks:
+      - traefik-net
+    environment:
+      - NODE_ENV=development
+      - USE_HTTPS=true
+      - MINIO_ENDPOINT=minio-api-2025.josemanuelmunoz.com
+      - MINIO_PORT=443
+      - MINIO_USE_SSL=true
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=dev-bucket
+
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+      - ./.env:/usr/src/app/.env
+    command: npm run dev
+    ports:
+      - '3000:3000' # Exponer el puerto para desarrollo local
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.dev-api-base.rule=Host(`dev-api-base-2025.josemanuelmunoz.com`)'
+      - 'traefik.http.routers.dev-api-base.entrypoints=websecure'
+      - 'traefik.http.routers.dev-api-base.tls.certresolver=myresolver'
+      - 'traefik.http.services.dev-api-base.loadbalancer.server.port=3000'
+      # 🛠️ Middleware (timeout)
+      # Prueba con un middleware más simple
+      # - "traefik.http.routers.dev-api-base.middlewares=my-timeout"
+      # - "traefik.http.middlewares.my-timeout.compressERROR=true"
+      # - "traefik.http.middlewares.limit.buffering.maxRequestBodyBytes=2000000"
+      # - "traefik.http.middlewares.limit.buffering.maxRequestBodyBytes=2000000"
+      # - "traefik.http.routers.dev-api-base.middlewares=limit"
+      # - "traefik.http.middlewares.my-timeout.http.timeouts.readTimeout=30s"
+      # - "traefik.http.middlewares.my-timeout.http.timeouts.writeTimeout=30s"
+      # - "traefik.http.middlewares.my-timeout.http.timeouts.idleTimeout=60s"
+
+      # - 'traefik.http.routers.dev-api-base.middlewares=my-timeout'
+      # - 'traefik.http.middlewares.upload-limit.buffering.maxRequestBodyBytes=52428800'  # 50 MB
+      # - 'traefik.http.middlewares.my-timeout.http.timeouts.readTimeout=600s'  # Sintaxis correcta
+      # - 'traefik.http.middlewares.my-timeout.http.timeouts.writeTimeout=600s'
+    external_links:
+      - minio:minio
+# La red necesaria ya está definida arriba
