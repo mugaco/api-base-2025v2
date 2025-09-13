@@ -1,14 +1,4 @@
 import { createContainer, asClass, asFunction, asValue, AwilixContainer, InjectionMode, Resolver } from 'awilix';
-import { LoggerService } from './services/LoggerService';
-
-//-----------temporalmente
-import { PruebaRepository } from '@api/entities/Prueba/PruebaRepository';
-import { PruebaService } from '@api/entities/Prueba/PruebaService';
-import { PruebaController } from '@api/entities/Prueba/PruebaController';
-import { TestController } from '@api/entities/Test/TestController';
-import { TestService } from '@api/entities/Test/TestService';
-import { TestRepository } from '@api/entities/Test/TestRepository';
-//-----------temporalmente
 
 
 // Tipos para el builder pattern
@@ -48,8 +38,7 @@ export class Container {
       injectionMode: InjectionMode.CLASSIC
     });
 
-    this.initialized = true;  // Marcar como inicializado ANTES de registrar
-    this.registerCoreServices();
+    this.initialized = true;  // Marcar como inicializado
 
     return this.instance;
   }
@@ -145,32 +134,6 @@ export class Container {
    */
   static registerBulk(services: Record<string, Resolver<unknown>>): void {
     this.get().register(services);
-  }
-
-  /**
-   * Registrar servicios core del sistema
-   */
-  private static registerCoreServices(): void {
-    // Configuraciones básicas
-    this.register('config').asValue({
-      env: process.env.NODE_ENV || 'development',
-      port: process.env.PORT || 3000
-    });
-
-    // Servicios core
-    this.register('loggerService').asClass(LoggerService).singleton();
-    
-    //-----------temporalmente
-    this.register('pruebaRepository').asClass(PruebaRepository).singleton();
-    this.register('pruebaService').asClass(PruebaService).singleton();
-    this.register('pruebaController').asClass(PruebaController).singleton();
-    
-    // Test entities - PROXY mode automático
-    this.register('testRepository').asClass(TestRepository).scoped();
-    this.register('testService').asClass(TestService).scoped();
-    this.register('testController').asClass(TestController).scoped();
-    //-----------temporalmente
-
   }
 
   /**
