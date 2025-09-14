@@ -4,7 +4,8 @@
  */
 import { AwilixContainer } from 'awilix';
 import { registerCoreDependencies } from './core.dependencies';
-import { registerEntitiesDependencies } from '@api/dependencies/entities.dependencies';
+import { registerDomainDependencies } from './domain.dependencies';
+import { registerEntitiesDependencies } from '@api/dependencies/domain.dependencies';
 import { registerMiddlewareDependencies } from './middleware.dependencies';
 import { registerExternalDependencies } from './external.dependencies';
 import { Container } from '@core/Container';
@@ -38,9 +39,13 @@ export function registerAllDependencies(container: AwilixContainer): void {
     registerMiddlewareDependencies(container);
     logger?.info('✓ Dependencias de middleware registradas');
 
-    // 4. Registrar entidades del dominio
+    // 4. Registrar entidades de dominio core
+    registerDomainDependencies(container);
+    logger?.info('✓ Dependencias de dominio core registradas');
+
+    // 5. Registrar entidades del API
     registerEntitiesDependencies(container);
-    logger?.info('✓ Dependencias de entidades registradas');
+    logger?.info('✓ Dependencias de entidades API registradas');
 
     logger?.info('✅ Todas las dependencias han sido registradas correctamente');
   } catch (error) {

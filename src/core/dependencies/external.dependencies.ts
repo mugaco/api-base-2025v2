@@ -4,6 +4,8 @@
  */
 import { AwilixContainer } from 'awilix';
 import { Container } from '@core/Container';
+import { EmailService } from '@core/services/EmailService';
+import { EventService } from '@core/services/EventService';
 
 /**
  * Registra servicios que interactúan con sistemas externos
@@ -13,7 +15,12 @@ export function registerExternalDependencies(_container: AwilixContainer): void 
   // ========================================
   // Servicios de Email
   // ========================================
-  // Container.register('emailService').asClass(EmailService).singleton();
+  Container.register('emailService').asClass(EmailService).singleton();
+
+  // ========================================
+  // Servicios de Eventos
+  // ========================================
+  Container.register('eventService').asClass(EventService).singleton();
   // Container.register('mailgunService').asClass(MailgunService).singleton();
   // Container.register('sendgridService').asClass(SendgridService).singleton();
   // Container.register('emailTemplateService').asClass(EmailTemplateService).singleton();
