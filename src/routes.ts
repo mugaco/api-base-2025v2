@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { PruebaRoutes } from '@api/entities/Prueba/PruebaRoutes';
-import { TestRoutes } from '@api/entities/Test/TestRoutes';
+import { PruebaRoutes } from '@api/domain/entities/Prueba/PruebaRoutes';
+import { TestRoutes } from '@api/domain/entities/Test/TestRoutes';
 
 const router = Router();
 

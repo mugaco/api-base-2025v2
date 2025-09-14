@@ -4,20 +4,21 @@ import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
 import { IGetQueryParams } from '@core/base/interfaces/GetQueryParams.interface';
 import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
 import { IController } from '@core/base/interfaces/controller.interface';
+import { IService, FilterQuery } from '@core/base/interfaces/service.interface';
 
 /**
- * Interfaz que define los métodos básicos que debe tener un servicio para el BaseController
+ * Extensión de IService para incluir métodos específicos del BaseController
  */
-interface ICrudService {
-  getAll(filter?: unknown, options?: IQueryOptions): Promise<unknown[]>;
-  getById(id: string): Promise<unknown>;
-  create(data: unknown): Promise<unknown>;
-  update(id: string, data: unknown): Promise<unknown>;
-  delete(id: string): Promise<boolean>;
-  softDelete?(id: string): Promise<unknown>;
-  restore?(id: string): Promise<unknown>;
-  getPaginated(filter: unknown, paginationParams: IPaginationParams, options?: IQueryOptions): Promise<unknown>;
-  getPaginatedWithFilters?(filter: unknown, paginationParams: IPaginationParams, options?: IQueryOptions, advancedFilters?: string): Promise<unknown>;
+interface ICrudService<T = unknown, CreateDTO = unknown, UpdateDTO = unknown> extends IService<T, CreateDTO, UpdateDTO> {
+  // Método adicional para filtros avanzados (opcional)
+  getPaginatedWithFilters?(
+    filter: FilterQuery,
+    paginationParams: IPaginationParams,
+    options?: IQueryOptions,
+    advancedFilters?: string
+  ): Promise<IPaginatedResponse<T>>;
+
+  // restore ya está en IService como opcional
 }
 
 /**
@@ -219,7 +220,7 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
    * Procesa el parámetro simpleSearch para construir condiciones de búsqueda
    * Formato esperado: { search: "término de búsqueda", fields: ["campo1", "campo2"] }
    */
-  protected processSimpleSearch(req: Request): Record<string, unknown> | null {
+  protected processSimpleSearch(req: Request): FilterQuery | null {
     try {
       // Si no hay parámetro simpleSearch, retornar null
       if (!req.query.simpleSearch) {
@@ -258,9 +259,9 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
    * @param buildQueryFn - Función para construir el objeto de consulta basado en los parámetros
    */
   protected async handleGetRequest(
-    req: Request, 
-    res: Response, 
-    buildQueryFn: (req: Request) => unknown
+    req: Request,
+    res: Response,
+    buildQueryFn: (req: Request) => FilterQuery
   ): Promise<void> {
     // Construir la consulta base
     const baseQuery = buildQueryFn(req);
@@ -274,7 +275,7 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
         const simpleSearchQuery = this.processSimpleSearch(req);
         if (simpleSearchQuery) {
           // Combinar la consulta base con las condiciones de búsqueda simple
-          finalQuery = { ...(baseQuery as Record<string, unknown>), ...simpleSearchQuery };
+          finalQuery = { ...baseQuery, ...simpleSearchQuery };
         }
       } catch (searchError) {
         const errorMessage = searchError instanceof Error ? searchError.message : 'Error processing search parameters';
@@ -364,7 +365,7 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
    * Método abstracto que debe ser implementado por las clases hijas
    * para construir la query específica de cada recurso
    */
-  protected abstract buildQuery(req: Request): Record<string, unknown>;
+  protected abstract buildQuery(req: Request): FilterQuery;
 
   // Métodos CRUD estándar que pueden ser sobrescritos por las clases hijas
 

@@ -6,14 +6,14 @@ import { AwilixContainer } from 'awilix';
 import { Container } from '@core/Container';
 
 // Importar entidades - Prueba
-import { PruebaRepository } from '@api/entities/Prueba/PruebaRepository';
-import { PruebaService } from '@api/entities/Prueba/PruebaService';
-import { PruebaController } from '@api/entities/Prueba/PruebaController';
+import { PruebaRepository } from '@api/domain/entities/Prueba/PruebaRepository';
+import { PruebaService } from '@api/domain/entities/Prueba/PruebaService';
+import { PruebaController } from '@api/domain/entities/Prueba/PruebaController';
 
 // Importar entidades - Test
-import { TestRepository } from '@api/entities/Test/TestRepository';
-import { TestService } from '@api/entities/Test/TestService';
-import { TestController } from '@api/entities/Test/TestController';
+import { TestRepository } from '@api/domain/entities/Test/TestRepository';
+import { TestService } from '@api/domain/entities/Test/TestService';
+import { TestController } from '@api/domain/entities/Test/TestController';
 
 /**
  * Registra todas las dependencias relacionadas con entidades del dominio
