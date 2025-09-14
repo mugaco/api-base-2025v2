@@ -2,16 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { useForbiddenError, useUnauthorizedError } from '@core/hooks/useError';
 import { Role, rolePermissions } from '@core/security/roles';
 import { Permission } from '@core/security/permissions';
-import { IAuthTokenPayload } from '@core/domain/entities/Access/AccessSchema';
-
-// Extender el objeto Request para incluir usuario
-declare global {
-  namespace Express {
-    interface Request {
-      user?: IAuthTokenPayload;
-    }
-  }
-}
 
 // Mapeo de métodos HTTP a operaciones
 const methodToOperation: Record<string, string> = {

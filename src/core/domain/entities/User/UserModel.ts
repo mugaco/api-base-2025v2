@@ -20,7 +20,7 @@ const UserSchema = new Schema<IUserModel>(
       unique: true,
       trim: true,
       lowercase: true,
-      match: [/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, 'Por favor ingrese un email válido'],
+      match: [/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/, 'Por favor ingrese un email válido'],
     },
     password: {
       type: String,
@@ -62,7 +62,7 @@ const UserSchema = new Schema<IUserModel>(
   {
     timestamps: true,
     toJSON: {
-      transform: (doc, ret) => {
+      transform: (_doc: Document, ret: Record<string, unknown>): Record<string, unknown> => {
         delete ret.password;
         return ret;
       },
@@ -78,8 +78,8 @@ UserSchema.pre('save', async function (next) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password as string, salt);
     next();
-  } catch (error: any) {
-    next(error);
+  } catch (error) {
+    next(error as Error);
   }
 });
 
@@ -89,7 +89,7 @@ UserSchema.methods.comparePassword = async function (
 ): Promise<boolean> {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
-  } catch (error) {
+  } catch {
     return false;
   }
 };

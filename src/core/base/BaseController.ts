@@ -435,8 +435,8 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
     try {
       const _id = req.params._id;
       await this.service.delete(_id);
-      
-      res.status(204).send();
+
+      this.sendSuccessResponse(res, { message: 'Resource deleted successfully' }, 200);
     } catch (error) {
       next(error);
     }

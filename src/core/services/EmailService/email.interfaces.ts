@@ -22,14 +22,14 @@ export interface EmailAttachment {
 
 export interface EmailTransportConfig {
   name: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface EmailTransportResult {
   success: boolean;
   messageId?: string;
   error?: Error;
-  info?: any;
+  info?: Record<string, unknown>;
 }
 
 export interface EmailTransport {

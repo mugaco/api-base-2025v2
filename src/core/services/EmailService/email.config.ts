@@ -34,7 +34,7 @@ export function getConfiguredTransport(): ConfiguredTransport {
       const domain = process.env.MAILGUN_DOMAIN;
       
       if (!apiKey || !domain) {
-        console.warn('Mailgun credentials not found, falling back to logger transport');
+        // Mailgun credentials not found, falling back to logger transport
         return {
           name: 'logger',
           transport: new LoggerTransport()
@@ -52,11 +52,11 @@ export function getConfiguredTransport(): ConfiguredTransport {
     }
     
     case 'logger':
-    default:
+    default: {
       // Convertir string a booleano para logToFile
       const logToFile = process.env.EMAIL_LOG_TO_FILE === 'true';
       const logToConsole = process.env.EMAIL_LOG_TO_CONSOLE !== 'false';
-      
+
       // Configurar la ruta del archivo de logs (asegurándose que sea absoluta)
       let logFilePath = process.env.EMAIL_LOG_FILE_PATH;
       
@@ -72,16 +72,12 @@ export function getConfiguredTransport(): ConfiguredTransport {
         // Asegurarnos que el directorio existe
         const logsDir = path.dirname(logFilePath);
         if (!fs.existsSync(logsDir)) {
-          console.log(`Creando directorio para logs: ${logsDir}`);
+          // Creando directorio para logs
           fs.mkdirSync(logsDir, { recursive: true });
         }
       }
       
-      console.log(`🔧 Configuración de Logger Transport:
-        - logToConsole: ${logToConsole}
-        - logToFile: ${logToFile}
-        - logFilePath: ${logFilePath || 'no configurado'}`);
-      
+      // Configuración de Logger Transport aplicada
       return {
         name: 'logger',
         transport: new LoggerTransport({
@@ -90,5 +86,6 @@ export function getConfiguredTransport(): ConfiguredTransport {
           logFilePath
         })
       };
+    }
   }
 } 

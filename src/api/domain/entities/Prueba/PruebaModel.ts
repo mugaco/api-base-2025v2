@@ -34,7 +34,7 @@ const pruebaSchema = new Schema<IPrueba>(
   {
     timestamps: true,
     toJSON: {
-      transform: (_doc: Document, ret: Record<string, any>) => {
+      transform: (_doc: Document, ret: Record<string, unknown>): Record<string, unknown> => {
         delete ret.isDeleted;
         delete ret.__v;
         return ret;

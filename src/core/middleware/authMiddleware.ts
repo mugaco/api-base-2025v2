@@ -3,15 +3,6 @@ import { TokenService } from '@core/services/TokenService';
 import { useUnauthorizedError } from '@core/hooks/useError';
 import { IAuthTokenPayload } from '@core/domain/entities/Access/AccessSchema';
 
-// Extender el objeto Request para incluir usuario
-declare global {
-  namespace Express {
-    interface Request {
-      user?: IAuthTokenPayload;
-    }
-  }
-}
-
 // Servicio de tokens
 const tokenService = new TokenService();
 
@@ -32,8 +23,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
       .then(decoded => {
         // Añadir usuario al objeto request
         req.user = decoded;
-        console.log('req.user', req.user);
-        
+
         // Añadir user_id al body solo en métodos que suelen tener body
         const methodsWithBody = ['POST', 'PUT', 'PATCH', 'DELETE'];
         if (methodsWithBody.includes(req.method) && req.body) {

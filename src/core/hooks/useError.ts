@@ -1,11 +1,14 @@
+// Tipo para errores detallados
+export type ErrorDetails = Record<string, string | string[] | unknown>;
+
 // Define la clase base de error
 export class HttpError extends Error {
   statusCode: number;
   isOperational: boolean;
   code: string;
-  errors?: any; // Nuevo campo para almacenar errores detallados
+  errors?: ErrorDetails; // Nuevo campo para almacenar errores detallados
 
-  constructor(message: string, statusCode: number, code?: string, errors?: any) {
+  constructor(message: string, statusCode: number, code?: string, errors?: ErrorDetails) {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = true; // Indica si es un error operacional conocido
@@ -32,7 +35,7 @@ export function useNotFoundError(resource: string): HttpError {
   return new HttpError(`${resource} no encontrado`, 404, 'NOT_FOUND');
 }
 
-export function useBadRequestError(message: string, code = 'BAD_REQUEST', errors?: any): HttpError {
+export function useBadRequestError(message: string, code = 'BAD_REQUEST', errors?: ErrorDetails): HttpError {
   return new HttpError(message, 400, code, errors);
 }
 
@@ -48,12 +51,26 @@ export function useInternalServerError(message = 'Error interno del servidor', c
   return new HttpError(message, 500, code);
 }
 
+// Tipo para errores de MongoDB
+interface MongoError {
+  name?: string;
+  code?: number;
+  keyPattern?: Record<string, unknown>;
+  keyValue?: Record<string, unknown>;
+  message?: string;
+}
+
 /**
  * Helper para manejar errores de MongoDB específicos
  */
-export const handleMongoError = (error: any): HttpError => {
+export const handleMongoError = (error: MongoError | HttpError | Error): HttpError => {
+  // Type guard para MongoError
+  const isMongoError = (err: unknown): err is MongoError => {
+    return typeof err === 'object' && err !== null && 'code' in err;
+  };
+
   // Detectar errores de clave duplicada (E11000)
-  if (error.name === 'MongoServerError' && error.code === 11000) {
+  if (isMongoError(error) && error.name === 'MongoServerError' && error.code === 11000) {
     // Extraer información del error
     const keyPattern = error.keyPattern || {};
     const keyValue = error.keyValue || {};

@@ -140,42 +140,61 @@ export const ResetPasswordResponseSchema = z.object({
 export type IResetPasswordResponse = z.infer<typeof ResetPasswordResponseSchema>;
 
 // Función de conversión para mapear Access a un tipo de respuesta (similar a userToResponse)
-export const accessToResponse = (access: any) => {
+export const accessToResponse = (access: unknown): IAccess => {
+  // Type guard para verificar si el objeto tiene métodos de Mongoose
+  const hasToObject = (obj: unknown): obj is { toObject: () => Record<string, unknown> } => {
+    return obj !== null && typeof obj === 'object' && 'toObject' in obj && typeof obj.toObject === 'function';
+  };
+
+  const hasToJSON = (obj: unknown): obj is { toJSON: () => Record<string, unknown> } => {
+    return obj !== null && typeof obj === 'object' && 'toJSON' in obj && typeof obj.toJSON === 'function';
+  };
+
   // Convertir documento Mongoose a objeto plano si es necesario
-  const accessObj = access && typeof access.toObject === 'function' 
-    ? access.toObject() 
-    : (access && typeof access.toJSON === 'function' ? access.toJSON() : access);
-  
+  let accessObj: Record<string, unknown> = {};
+  if (hasToObject(access)) {
+    accessObj = access.toObject();
+  } else if (hasToJSON(access)) {
+    accessObj = access.toJSON();
+  } else if (access && typeof access === 'object') {
+    accessObj = access as Record<string, unknown>;
+  }
   // Manejar ID de MongoDB apropiadamente
   let _id = '';
-  if (accessObj?._id) {
-    _id = typeof accessObj._id.toString === 'function' 
-      ? accessObj._id.toString() 
-      : String(accessObj._id);
+  if (accessObj._id) {
+    const id = accessObj._id;
+    if (typeof id === 'object' && id !== null && 'toString' in id && typeof id.toString === 'function') {
+      _id = id.toString();
+    } else {
+      _id = String(id);
+    }
   }
-  
+
   // Asegurar que user_id sea string
   let user_id = '';
-  if (accessObj?.user_id) {
-    user_id = typeof accessObj.user_id.toString === 'function' 
-      ? accessObj.user_id.toString() 
-      : String(accessObj.user_id);
+  if (accessObj.user_id) {
+    const userId = accessObj.user_id;
+    if (typeof userId === 'object' && userId !== null && 'toString' in userId && typeof userId.toString === 'function') {
+      user_id = userId.toString();
+    } else {
+      user_id = String(userId);
+    }
   }
-  
+
   return {
     _id,
     user_id,
-    ip_address: accessObj?.ip_address || '',
-    origin: accessObj?.origin || '',
-    agent: accessObj?.agent || '',
-    refreshtoken_id: accessObj?.refreshtoken_id || '',
-    is_revoked: typeof accessObj?.is_revoked === 'boolean' ? accessObj.is_revoked : false,
-    expiresAt: accessObj?.expiresAt || new Date(),
-    createdAt: accessObj?.createdAt || new Date(),
-    updatedAt: accessObj?.updatedAt || new Date(),
-    recovery_token: accessObj?.recovery_token || null,
-    recovery_expires: accessObj?.recovery_expires || null,
-    recovery_redirect_url: accessObj?.recovery_redirect_url || null,
-    recovery_used: typeof accessObj?.recovery_used === 'boolean' ? accessObj.recovery_used : false
+    ip_address: typeof accessObj.ip_address === 'string' ? accessObj.ip_address : '',
+    origin: typeof accessObj.origin === 'string' ? accessObj.origin : '',
+    agent: typeof accessObj.agent === 'string' ? accessObj.agent : '',
+    refreshtoken_id: typeof accessObj.refreshtoken_id === 'string' ? accessObj.refreshtoken_id : '',
+    is_revoked: typeof accessObj.is_revoked === 'boolean' ? accessObj.is_revoked : false,
+    expiresAt: accessObj.expiresAt instanceof Date ? accessObj.expiresAt : new Date(),
+    createdAt: accessObj.createdAt instanceof Date ? accessObj.createdAt : new Date(),
+    updatedAt: accessObj.updatedAt instanceof Date ? accessObj.updatedAt : new Date(),
+    recovery_token: typeof accessObj.recovery_token === 'string' || accessObj.recovery_token === null ? accessObj.recovery_token : null,
+    recovery_expires: accessObj.recovery_expires instanceof Date || accessObj.recovery_expires === null ? accessObj.recovery_expires : null,
+    recovery_redirect_url: typeof accessObj.recovery_redirect_url === 'string' || accessObj.recovery_redirect_url === null ? accessObj.recovery_redirect_url : null,
+    recovery_used: typeof accessObj.recovery_used === 'boolean' ? accessObj.recovery_used : false
   };
 }; 

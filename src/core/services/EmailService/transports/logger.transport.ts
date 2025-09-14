@@ -1,11 +1,13 @@
-import { 
-  EmailOptions, 
-  EmailTransport, 
-  EmailTransportResult 
+import {
+  EmailOptions,
+  EmailTransport,
+  EmailTransportResult
 } from '../email.interfaces';
 import * as nodemailer from 'nodemailer';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Container } from '@core/Container';
+import { ILoggerService } from '@core/services/LoggerService';
 
 export interface LoggerTransportConfig {
   logToConsole?: boolean;
@@ -16,17 +18,19 @@ export interface LoggerTransportConfig {
 export class LoggerTransport implements EmailTransport {
   private transporter: nodemailer.Transporter;
   private config: LoggerTransportConfig;
+  private logger: ILoggerService;
   
   constructor(config: LoggerTransportConfig = {}) {
-    console.log('⚓ Inicializando LoggerTransport con config:', JSON.stringify(config, null, 2));
-    
+
     this.config = {
       logToConsole: config.logToConsole !== false,
       logToFile: config.logToFile === true,
       logFilePath: config.logFilePath || path.join(process.cwd(), 'logs', 'emails.log')
     };
+
+    // Obtener el logger del contenedor
+    this.logger = Container.resolve<ILoggerService>('loggerService');
     
-    console.log('⚓ Config final de LoggerTransport:', JSON.stringify(this.config, null, 2));
     
     // Crear el transporte stream de Nodemailer
     this.transporter = nodemailer.createTransport({
@@ -38,35 +42,28 @@ export class LoggerTransport implements EmailTransport {
     if (this.config.logToFile) {
       try {
         const logPath = this.config.logFilePath || '';
-        console.log(`⚓ Creando directorio para logs en: ${logPath}`);
         
         const dir = path.dirname(logPath);
         if (!fs.existsSync(dir)) {
-          console.log(`⚓ El directorio ${dir} no existe, creándolo...`);
           fs.mkdirSync(dir, { recursive: true });
-          console.log(`⚓ Directorio creado: ${dir}`);
-        } else {
-          console.log(`⚓ El directorio ${dir} ya existe`);
-        }
+        } 
         
         // Verificar que podemos escribir en el directorio
         const testFile = path.join(dir, '.test_write');
         fs.writeFileSync(testFile, 'test', 'utf8');
         fs.unlinkSync(testFile);
-        console.log(`⚓ Prueba de escritura en ${dir} exitosa`);
+        // Prueba de escritura exitosa
       } catch (error) {
-        console.error('❌ Error al preparar el directorio de logs:', error);
+        throw new Error(`Error al preparar el directorio de logs: ${error}`);
       }
     }
   }
   
   public async verify(): Promise<boolean> {
-    console.log('⚓ Verificando LoggerTransport');
     return true; // Siempre funciona
   }
   
   public async send(options: EmailOptions): Promise<EmailTransportResult> {
-    console.log('⚓ Enviando email con LoggerTransport');
     try {
       // Adaptar las opciones al formato de Nodemailer
       const mailOptions: nodemailer.SendMailOptions = {
@@ -86,25 +83,7 @@ export class LoggerTransport implements EmailTransport {
       
       // Enviar a través del transporte stream de Nodemailer
       const info = await this.transporter.sendMail(mailOptions);
-      
-      // Transformar el contenido a una cadena legible 
-      let rawContent: string;
-      
-      try {
-        // Intentar convertir el mensaje a string si es un stream
-        if (info.message) {
-          if (typeof info.message.toString === 'function') {
-            rawContent = info.message.toString();
-          } else {
-            rawContent = JSON.stringify(info.message);
-          }
-        } else {
-          rawContent = 'No message content available';
-        }
-      } catch (err) {
-        rawContent = `Error al convertir el mensaje: ${err}`;
-      }
-      
+
       // Crear un resumen formateado del email para el log
       const emailSummary = `
 FROM: ${options.from}
@@ -133,16 +112,17 @@ ${options.attachments.map(a => `- ${a.filename} (${a.contentType || 'unknown typ
       
       // Manejar la salida según la configuración
       if (this.config.logToConsole) {
-        console.log('\n=== EMAIL LOGGER TRANSPORT ===');
-        console.log(emailSummary);
-        console.log('==============================\n');
+        this.logger.info('EMAIL LOGGER TRANSPORT', {
+          summary: emailSummary,
+          messageId: info.messageId
+        });
       }
       
       // Guardar en archivo si está configurado
       if (this.config.logToFile) {
         try {
           const logPath = this.config.logFilePath;
-          console.log(`⚓ Intentando escribir el email en: ${logPath}`);
+          // Escribir el email en el archivo de log
           
           if (!logPath) {
             throw new Error('La ruta del archivo de logs es undefined');
@@ -151,7 +131,6 @@ ${options.attachments.map(a => `- ${a.filename} (${a.contentType || 'unknown typ
           // Asegurarnos que existe el directorio
           const dir = path.dirname(logPath);
           if (!fs.existsSync(dir)) {
-            console.log(`⚓ Creando directorio ${dir}...`);
             fs.mkdirSync(dir, { recursive: true });
           }
           
@@ -159,16 +138,14 @@ ${options.attachments.map(a => `- ${a.filename} (${a.contentType || 'unknown typ
           
           // Intentar escribir directamente con writeFileSync primero si el archivo no existe
           if (!fs.existsSync(logPath)) {
-            console.log(`⚓ El archivo ${logPath} no existe, creándolo...`);
             fs.writeFileSync(logPath, logEntry, 'utf8');
           } else {
-            console.log(`⚓ Añadiendo contenido al archivo existente ${logPath}`);
             fs.appendFileSync(logPath, logEntry, 'utf8');
           }
           
-          console.log(`✅ Email guardado en el archivo: ${logPath}`);
-        } catch (error) {
-          console.error('❌ Error al escribir en el archivo de logs:', error);
+          // Email guardado exitosamente
+        } catch {
+          // Error silencioso al escribir logs - no interrumpir el flujo del email
         }
       }
       
@@ -178,7 +155,7 @@ ${options.attachments.map(a => `- ${a.filename} (${a.contentType || 'unknown typ
         info: info
       };
     } catch (error) {
-      console.error('❌ Error en LoggerTransport:', error);
+      // Error al enviar email
       return {
         success: false,
         error: error instanceof Error ? error : new Error(String(error))

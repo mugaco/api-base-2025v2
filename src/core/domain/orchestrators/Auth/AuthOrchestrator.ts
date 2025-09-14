@@ -17,7 +17,8 @@ import {
 } from '../../entities/Access';
 
 import {
-  UserService
+  UserService,
+  IUserModel
 } from '../../entities/User';
 
 /**
@@ -128,7 +129,7 @@ export class AuthOrchestrator {
         token,
         refreshToken
       };
-    } catch (error) {
+    } catch {
       throw useUnauthorizedError('Error al refrescar el token');
     }
   }
@@ -141,7 +142,7 @@ export class AuthOrchestrator {
       const refreshTokenId = await this.tokenService.getRefreshTokenId(refreshToken);
       await this.accessService.revokeByRefreshTokenId(refreshTokenId);
       return true;
-    } catch (error) {
+    } catch {
       throw useUnauthorizedError('Token de refresco inválido');
     }
   }
@@ -238,15 +239,15 @@ export class AuthOrchestrator {
             timestamp: new Date()
           });
         }
-      } catch (error) {
-        console.error('Error al emitir evento password:recovery-requested:', error);
+      } catch {
+        // Error al emitir evento password:recovery-requested - no interrumpir el flujo
       }
       
       return {
         success: true,
         message: 'Si el correo existe, se ha enviado un enlace de recuperación'
       };
-    } catch (error) {
+    } catch {
       throw useBadRequestError('Error al procesar solicitud de recuperación');
     }
   }
@@ -325,8 +326,8 @@ export class AuthOrchestrator {
             timestamp: new Date()
           });
         }
-      } catch (error) {
-        console.error('Error al emitir evento password:reset-completed:', error);
+      } catch {
+        // Error al emitir evento password:reset-completed - no interrumpir el flujo
       }
       
       return {
@@ -344,7 +345,7 @@ export class AuthOrchestrator {
   /**
    * Generar tokens de autenticación
    */
-  private async generateTokens(user: any, headers: { ip_address?: string; origin?: string; agent?: string }): Promise<{ token: string, refreshToken: string }> {
+  private async generateTokens(user: IUserModel, headers: { ip_address?: string; origin?: string; agent?: string }): Promise<{ token: string, refreshToken: string }> {
     try {
       // Crear payload para JWT
       const payload: IAuthTokenPayload = {

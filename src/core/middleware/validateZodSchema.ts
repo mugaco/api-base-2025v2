@@ -19,7 +19,17 @@ const validateZodSchema = (schema: ZodSchema) => {
             next();
         } catch (error) {
             if (error instanceof ZodError) {
-                next(useBadRequestError('Error de validación', 'BAD_REQUEST', error.errors));
+                // Transformar errores de Zod al formato ErrorDetails
+                const errorDetails = error.errors.reduce((acc, issue) => {
+                    const field = issue.path.join('.');
+                    if (!acc[field]) {
+                        acc[field] = [];
+                    }
+                    (acc[field] as string[]).push(issue.message);
+                    return acc;
+                }, {} as Record<string, string[]>);
+
+                next(useBadRequestError('Error de validación', 'BAD_REQUEST', errorDetails));
             } else {
                 next(error);
             }

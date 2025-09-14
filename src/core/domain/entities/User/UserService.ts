@@ -3,6 +3,10 @@ import { useBadRequestError, useNotFoundError } from '../../../hooks/useError';
 import { IUserModel } from './UserModel';
 import { UserRepository } from './UserRepository';
 import { ICreateUser, IUpdateUser, IUpdatePassword, IUserResponse, userToResponse } from './UserSchema';
+import { FilterQuery } from '@core/base/interfaces/service.interface';
+import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interface';
+import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
+import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
 
 /**
  * Servicio para la entidad User heredando de BaseService
@@ -15,7 +19,7 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
   /**
    * Sobrescribe getAll para aplicar transformación
    */
-  async getAll(query?: any): Promise<IUserResponse[]> {
+  async getAll(query?: FilterQuery): Promise<IUserResponse[]> {
     const users = await super.getAll(query);
     return users.map(user => userToResponse(user as unknown as IUserModel));
   }
@@ -31,7 +35,7 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
   /**
    * Sobrescribe findOne para aplicar transformación
    */
-  async findOne(query: any): Promise<IUserResponse | null> {
+  async findOne(query: FilterQuery): Promise<IUserResponse | null> {
     const user = await super.findOne(query);
     return user ? userToResponse(user as unknown as IUserModel) : null;
   }
@@ -41,10 +45,10 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
    */
   async create(data: ICreateUser): Promise<IUserResponse> {
     // Adaptamos el avatar para manejar el tipo null
-    const createData: any = { 
-      ...data, 
-      avatar: data.avatar === null ? undefined : data.avatar 
-    };
+    const createData = {
+      ...data,
+      avatar: data.avatar === null ? undefined : data.avatar
+    } as ICreateUser;
     const newUser = await super.create(createData);
     return userToResponse(newUser as unknown as IUserModel);
   }
@@ -54,8 +58,8 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
    */
   async update(_id: string, data: IUpdateUser): Promise<IUserResponse> {
     // Adaptamos el avatar para manejar el tipo null
-    const updateData: any = data.avatar === null 
-      ? { ...data, avatar: undefined } 
+    const updateData = data.avatar === null
+      ? { ...data, avatar: undefined }
       : data;
     
     const updatedUser = await super.update(_id, updateData);
@@ -74,14 +78,14 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
    * Sobrescribe getPaginated para aplicar transformación
    */
   async getPaginated(
-    query: any,
-    paginationParams: any,
-    options?: any
-  ): Promise<any> {
+    query: FilterQuery,
+    paginationParams: IPaginationParams,
+    options?: IQueryOptions
+  ): Promise<IPaginatedResponse<IUserResponse>> {
     const paginatedResult = await super.getPaginated(query, paginationParams, options);
     return {
       ...paginatedResult,
-      data: paginatedResult.data.map((user: any) => userToResponse(user as IUserModel))
+      data: paginatedResult.data.map((user) => userToResponse(user as unknown as IUserModel))
     };
   }
 
@@ -89,11 +93,11 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
    * Sobrescribe getPaginatedWithFilters para aplicar transformación
    */
   async getPaginatedWithFilters(
-    filter: any = {},
-    paginationParams: any,
-    options?: any,
+    filter: FilterQuery = {},
+    paginationParams: IPaginationParams,
+    options?: IQueryOptions,
     advancedFilters?: string
-  ): Promise<any> {
+  ): Promise<IPaginatedResponse<IUserResponse>> {
     const paginatedResult = await super.getPaginatedWithFilters(
       filter,
       paginationParams,
@@ -103,7 +107,7 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
     
     return {
       ...paginatedResult,
-      data: paginatedResult.data.map((user: any) => userToResponse(user as IUserModel))
+      data: paginatedResult.data.map((user) => userToResponse(user as unknown as IUserModel))
     };
   }
 
@@ -159,7 +163,7 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
    * Buscar usuario con contraseña incluida (para autenticación)
    * Retorna el modelo raw (no transformado) para acceso a métodos como comparePassword
    */
-  async findOneWithPassword(filter: any): Promise<IUserModel | null> {
+  async findOneWithPassword(filter: FilterQuery): Promise<IUserModel | null> {
     const repository = this.repository as UserRepository;
     return await repository.findOneWithPassword(filter);
   }
@@ -176,7 +180,7 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
    * Buscar usuario sin transformar (para uso en orquestadores)
    * Retorna el modelo raw para acceso completo a propiedades y métodos
    */
-  async findOneRaw(filter: any): Promise<IUserModel | null> {
+  async findOneRaw(filter: FilterQuery): Promise<IUserModel | null> {
     return await this.repository.findOne(filter);
   }
 } 

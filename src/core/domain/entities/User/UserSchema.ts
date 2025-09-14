@@ -112,32 +112,48 @@ export const UserResponseSchema = UserSchema
 export type IUserResponse = z.infer<typeof UserResponseSchema>;
 
 // Función auxiliar para convertir User a UserResponse (sin campos sensibles)
-export const userToResponse = (user: any): IUserResponse => {
+export const userToResponse = (user: unknown): IUserResponse => {
+  // Type guard para verificar si el objeto tiene métodos de Mongoose
+  const hasToObject = (obj: unknown): obj is { toObject: () => Record<string, unknown> } => {
+    return obj !== null && typeof obj === 'object' && 'toObject' in obj && typeof obj.toObject === 'function';
+  };
+
+  const hasToJSON = (obj: unknown): obj is { toJSON: () => Record<string, unknown> } => {
+    return obj !== null && typeof obj === 'object' && 'toJSON' in obj && typeof obj.toJSON === 'function';
+  };
+
   // Convertir documento Mongoose a objeto plano si es necesario
-  const userObj = user && typeof user.toObject === 'function' 
-    ? user.toObject() 
-    : (user && typeof user.toJSON === 'function' ? user.toJSON() : user);
-  
-  // Extraer password y asegurar que todos los campos requeridos tengan valores
-  const { password, ...rest } = userObj || {};
-  
+  let userObj: Record<string, unknown> = {};
+  if (hasToObject(user)) {
+    userObj = user.toObject();
+  } else if (hasToJSON(user)) {
+    userObj = user.toJSON();
+  } else if (user && typeof user === 'object') {
+    userObj = user as Record<string, unknown>;
+  }
+
   // Manejar ID de MongoDB apropiadamente
   let _id = '';
-  if (userObj?._id) {
-    _id = typeof userObj._id.toString === 'function' 
-      ? userObj._id.toString() 
-      : String(userObj._id);
+  if (userObj._id) {
+    const id = userObj._id;
+    if (typeof id === 'object' && id !== null && 'toString' in id && typeof id.toString === 'function') {
+      _id = id.toString();
+    } else {
+      _id = String(id);
+    }
   }
-  
+
   return {
     _id,
-    ...rest,
-    name: rest.name || '',
-    email: rest.email || '',
-    role: rest.role || UserRole.USER,
-    lang: rest.lang || 'es',
-    theme: rest.theme || 'dark',
-    isDeleted: typeof rest.isDeleted === 'boolean' ? rest.isDeleted : false,
-    isActive: typeof rest.isActive === 'boolean' ? rest.isActive : true,
+    name: typeof userObj.name === 'string' ? userObj.name : '',
+    email: typeof userObj.email === 'string' ? userObj.email : '',
+    role: userObj.role === UserRole.ADMIN || userObj.role === UserRole.USER ? userObj.role : UserRole.USER,
+    lang: typeof userObj.lang === 'string' ? userObj.lang : 'es',
+    theme: typeof userObj.theme === 'string' ? userObj.theme : 'dark',
+    avatar: typeof userObj.avatar === 'string' || userObj.avatar === null ? userObj.avatar : null,
+    isDeleted: typeof userObj.isDeleted === 'boolean' ? userObj.isDeleted : false,
+    isActive: typeof userObj.isActive === 'boolean' ? userObj.isActive : true,
+    createdAt: userObj.createdAt instanceof Date ? userObj.createdAt : new Date(),
+    updatedAt: userObj.updatedAt instanceof Date ? userObj.updatedAt : new Date()
   };
 };

@@ -1,16 +1,24 @@
 import { BaseService } from '@core/base/BaseService';
 import { IAccess } from './AccessModel';
 import { AccessRepository } from './AccessRepository';
-import { 
-  IAccess as IAccessBase, 
+import {
+  IAccess as IAccessBase,
   accessToResponse
 } from './AccessSchema';
+import { FilterQuery } from '@core/base/interfaces/service.interface';
+import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interface';
+import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
+import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
+
+// Tipos para operaciones de Access
+type ICreateAccess = Partial<IAccessBase>;
+type IUpdateAccess = Partial<IAccessBase>;
 
 /**
  * Servicio para la entidad Access heredando de BaseService
  * Mantiene solo operaciones CRUD puras sobre Access
  */
-export class AccessService extends BaseService<IAccess, IAccessBase, any, any> {
+export class AccessService extends BaseService<IAccess, IAccessBase, ICreateAccess, IUpdateAccess> {
   constructor(accessRepository: AccessRepository) {
     super(accessRepository);
   }
@@ -18,7 +26,7 @@ export class AccessService extends BaseService<IAccess, IAccessBase, any, any> {
   /**
    * Sobrescribe getAll para aplicar transformación
    */
-  async getAll(query?: any): Promise<IAccessBase[]> {
+  async getAll(query?: FilterQuery): Promise<IAccessBase[]> {
     const accesses = await super.getAll(query);
     return accesses.map(access => accessToResponse(access as unknown as IAccess));
   }
@@ -34,7 +42,7 @@ export class AccessService extends BaseService<IAccess, IAccessBase, any, any> {
   /**
    * Sobrescribe findOne para aplicar transformación
    */
-  async findOne(query: any): Promise<IAccessBase | null> {
+  async findOne(query: FilterQuery): Promise<IAccessBase | null> {
     const access = await super.findOne(query);
     return access ? accessToResponse(access as unknown as IAccess) : null;
   }
@@ -42,7 +50,7 @@ export class AccessService extends BaseService<IAccess, IAccessBase, any, any> {
   /**
    * Sobrescribe create para aplicar transformación
    */
-  async create(data: any): Promise<IAccessBase> {
+  async create(data: ICreateAccess): Promise<IAccessBase> {
     const newAccess = await super.create(data);
     return accessToResponse(newAccess as unknown as IAccess);
   }
@@ -50,7 +58,7 @@ export class AccessService extends BaseService<IAccess, IAccessBase, any, any> {
   /**
    * Sobrescribe update para aplicar transformación
    */
-  async update(_id: string, data: any): Promise<IAccessBase> {
+  async update(_id: string, data: IUpdateAccess): Promise<IAccessBase> {
     const updatedAccess = await super.update(_id, data);
     return accessToResponse(updatedAccess as unknown as IAccess);
   }
@@ -67,14 +75,14 @@ export class AccessService extends BaseService<IAccess, IAccessBase, any, any> {
    * Sobrescribe getPaginated para aplicar transformación
    */
   async getPaginated(
-    query: any,
-    paginationParams: any,
-    options?: any
-  ): Promise<any> {
+    query: FilterQuery,
+    paginationParams: IPaginationParams,
+    options?: IQueryOptions
+  ): Promise<IPaginatedResponse<IAccessBase>> {
     const paginatedResult = await super.getPaginated(query, paginationParams, options);
     return {
       ...paginatedResult,
-      data: paginatedResult.data.map((access: any) => accessToResponse(access as IAccess))
+      data: paginatedResult.data.map((access) => accessToResponse(access as unknown as IAccess))
     };
   }
 
@@ -82,11 +90,11 @@ export class AccessService extends BaseService<IAccess, IAccessBase, any, any> {
    * Sobrescribe getPaginatedWithFilters para aplicar transformación
    */
   async getPaginatedWithFilters(
-    filter: any = {},
-    paginationParams: any,
-    options?: any,
+    filter: FilterQuery = {},
+    paginationParams: IPaginationParams,
+    options?: IQueryOptions,
     advancedFilters?: string
-  ): Promise<any> {
+  ): Promise<IPaginatedResponse<IAccessBase>> {
     const paginatedResult = await super.getPaginatedWithFilters(
       filter,
       paginationParams,
@@ -96,7 +104,7 @@ export class AccessService extends BaseService<IAccess, IAccessBase, any, any> {
     
     return {
       ...paginatedResult,
-      data: paginatedResult.data.map((access: any) => accessToResponse(access as IAccess))
+      data: paginatedResult.data.map((access) => accessToResponse(access as unknown as IAccess))
     };
   }
 

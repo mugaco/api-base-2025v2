@@ -33,8 +33,8 @@ export class MailgunTransport implements EmailTransport {
       // Nodemailer proporciona un método de verificación
       await this.transporter.verify();
       return true;
-    } catch (error) {
-      console.error('Mailgun transport verification failed:', error);
+    } catch {
+      // Mailgun transport verification failed
       return false;
     }
   }
