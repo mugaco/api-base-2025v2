@@ -1,0 +1,61 @@
+/**
+ * Controlador para {{resourceNameUpper}}
+ */
+import { Request } from 'express';
+import { BaseController } from '@core/base/BaseController';
+import { {{resourceNameUpper}}Service } from './{{resourceNameUpper}}Service';
+
+/**
+ * Controlador para la entidad {{resourceNameUpper}} heredando de BaseController
+ */
+export class {{resourceNameUpper}}Controller extends BaseController<{{resourceNameUpper}}Service> {
+  constructor({{resourceNameLower}}Service: {{resourceNameUpper}}Service) {
+    super({{resourceNameLower}}Service);
+  }
+
+  /**
+   * Construye la query específica para {{resourceNameUpper}}
+   * Este método es requerido por BaseController
+   */
+  protected buildQuery(req: Request): Record<string, unknown> {
+    const query: Record<string, unknown> = {};
+
+    // Añadir filtros específicos del recurso aquí
+    {{#if hasSoftDelete}}
+    // Por defecto, mostrar solo elementos no eliminados
+    if (req.query.isDeleted === undefined) {
+      query.isDeleted = false;
+    } else {
+      query.isDeleted = req.query.isDeleted === 'true';
+    }
+    {{/if}}
+
+    return query;
+  }
+
+  // Aquí puedes sobrescribir cualquier método de BaseController si necesitas
+  // comportamiento específico para {{resourceNameUpper}}. Por ejemplo:
+
+  // create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  //   try {
+  //     const data = req.body as ICreate{{resourceNameUpper}};
+  //     // Lógica específica para crear una {{resourceNameUpper}}
+  //     const newItem = await this.service.create(data);
+  //     this.sendSuccessResponse(res, newItem, 201);
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
+
+  // update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  //   try {
+  //     const _id = req.params._id;
+  //     const data = req.body as IUpdate{{resourceNameUpper}};
+  //     // Lógica específica para actualizar una {{resourceNameUpper}}
+  //     const updatedItem = await this.service.update(_id, data);
+  //     this.sendSuccessResponse(res, updatedItem);
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
+}

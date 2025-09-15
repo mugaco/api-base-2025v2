@@ -1,0 +1,35 @@
+/**
+ * DTOs para {{resourceNameUpper}}
+ */
+import { {{validations.validationImports}} } from 'class-validator';
+{{#if hasSubdocuments}}
+import { Type } from 'class-transformer';
+{{else}}
+{{#if validations.validationImports}}
+{{#if (includes validations.validationImports "Type")}}
+import { Type } from 'class-transformer';
+{{/if}}
+{{/if}}
+{{/if}}
+{{#if (includes validations.validationImports "IsMongoId")}}
+import { Types } from 'mongoose';
+{{/if}}
+
+// DTOs de subdocumentos
+{{#if hasSubdocuments}}
+{{{subdocumentDTOs}}}
+{{/if}}
+
+/**
+ * DTO para crear un nuevo {{resourceNameUpper}}
+ */
+export class Create{{resourceNameUpper}}DTO {
+{{validations.createDTO}}
+}
+
+/**
+ * DTO para actualizar un {{resourceNameUpper}} existente
+ */
+export class Update{{resourceNameUpper}}DTO {
+{{validations.updateDTO}}
+} 

@@ -1,0 +1,27 @@
+{
+  "name": "tete",
+  "description": "creamos tetes",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string",
+      "required": true,
+      "description": "nombre",
+      "meta": {
+        "unique": true
+      }
+    },
+    {
+      "name": "pvp",
+      "type": "number",
+      "required": true,
+      "description": "precio"
+    }
+  ],
+  "audit": true,
+  "softDelete": true,
+  "api": {
+    "path": "tetes",
+    "auth": true
+  }
+}

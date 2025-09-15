@@ -1,0 +1,48 @@
+/**
+ * Repositorio para {{resourceNameUpper}}
+ */
+import { BaseRepository } from '@core/base/BaseRepository';
+import { {{resourceNameUpper}}Model, I{{resourceNameUpper}} } from './{{resourceNameUpper}}Model';
+
+/**
+ * Repositorio para la entidad {{resourceNameUpper}}
+ * Extiende BaseRepository para heredar operaciones CRUD estándar
+ */
+export class {{resourceNameUpper}}Repository extends BaseRepository<I{{resourceNameUpper}}> {
+  constructor() {
+    super({{resourceNameUpper}}Model);
+  }
+
+  // Métodos adicionales específicos del repositorio pueden añadirse aquí
+  // Los métodos CRUD estándar son heredados de BaseRepository:
+  // - findAll
+  // - findById
+  // - findOne
+  // - create
+  // - update
+  // - delete
+  // - softDelete (si está habilitado)
+  // - restore (si está habilitado)
+  // - countDocuments
+  // - aggregate
+  // - distinct
+  // - exists
+
+  /**
+   * Ejemplo de método personalizado con agregación
+   * Descomentar y modificar según necesidad
+   */
+  /*
+  async getStatistics(): Promise<any> {
+    return this.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          // Añadir más estadísticas según necesidad
+        }
+      }
+    ]);
+  }
+  */
+} 

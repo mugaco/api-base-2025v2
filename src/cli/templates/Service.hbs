@@ -1,0 +1,46 @@
+/**
+ * Servicio para {{resourceNameUpper}}
+ */
+import { BaseService } from '@core/base/BaseService';
+import { {{resourceNameUpper}}Repository } from './{{resourceNameUpper}}Repository';
+import { I{{resourceNameUpper}} } from './{{resourceNameUpper}}Model';
+import { ICreate{{resourceNameUpper}}, IUpdate{{resourceNameUpper}}, I{{resourceNameUpper}}Response } from './{{resourceNameUpper}}Schema';
+
+/**
+ * Servicio para la entidad {{resourceNameUpper}}
+ * Extiende BaseService para heredar operaciones CRUD estándar
+ */
+export class {{resourceNameUpper}}Service extends BaseService<
+  I{{resourceNameUpper}},
+  I{{resourceNameUpper}}Response,
+  ICreate{{resourceNameUpper}},
+  IUpdate{{resourceNameUpper}}
+> {
+  constructor({{resourceNameLower}}Repository: {{resourceNameUpper}}Repository) {
+    super({{resourceNameLower}}Repository);
+  }
+
+  // Métodos adicionales específicos del recurso pueden añadirse aquí
+  // Los métodos CRUD estándar son heredados de BaseService:
+  // - getAll
+  // - getById
+  // - findOne
+  // - create
+  // - update
+  // - delete
+  // - getPaginated
+  // - softDelete (si está habilitado)
+  // - restore (si está habilitado)
+  // - search
+
+  /**
+   * Ejemplo de método personalizado específico del recurso
+   * Descomentar y modificar según necesidad
+   */
+  /*
+  async findByField(value: string): Promise<I{{resourceNameUpper}}Response | null> {
+    const result = await this.repository.findOne({ field: value });
+    return result as I{{resourceNameUpper}}Response | null;
+  }
+  */
+}

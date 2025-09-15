@@ -1,0 +1,60 @@
+/**
+ * Modelo para {{resourceNameUpper}}
+ */
+import mongoose, { Schema, Document } from 'mongoose';
+import { I{{resourceNameUpper}}Base } from './{{resourceNameUpper}}Schema';
+
+{{#if hasSubdocumentInterfaces}}
+// Interfaces para subdocumentos
+{{{noEscape subdocumentInterfaces}}}
+
+{{/if}}
+// Interface para el modelo extendiendo Document
+export interface I{{resourceNameUpper}} extends Document, Omit<I{{resourceNameUpper}}Base, '_id'> {
+  _id: mongoose.Types.ObjectId;
+}
+
+// Definir esquema de {{resourceNameUpper}}
+const {{resourceNameLower}}Schema = new Schema<I{{resourceNameUpper}}>(
+  {
+    {{{noEscape mongoSchema}}}
+{{#if hasSoftDelete}}
+    // Campo para borrado lógico
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      select: false // No incluir por defecto en las consultas
+    }
+{{/if}}
+  },
+  {
+    timestamps: {{#if hasTimestamps}}true{{else}}false{{/if}},
+    toJSON: {
+      transform: (_doc: Document, ret: Record<string, unknown>): Record<string, unknown> => {
+        {{#if hasSoftDelete}}
+        delete ret.isDeleted;
+        {{/if}}
+        delete ret.__v;
+        return ret;
+      }
+    },
+    collection: '{{resourceNamesSnake}}',
+    strict: true
+  }
+);
+
+// Añadir índices
+{{#if schemaIndexes}}
+{{{noEscape schemaIndexes}}}
+{{/if}}
+
+{{#if hasSoftDelete}}
+// Índice para consultas que excluyen elementos borrados
+{{resourceNameLower}}Schema.index({ isDeleted: 1 });
+{{/if}}
+
+// Crear y exportar modelo
+export const {{resourceNameUpper}}Model = mongoose.model<I{{resourceNameUpper}}>(
+  '{{resourceNameUpper}}',
+  {{resourceNameLower}}Schema
+); 

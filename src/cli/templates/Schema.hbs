@@ -1,0 +1,49 @@
+import { z } from 'zod';
+
+// Esquema base para {{resourceNameUpper}}
+export const {{resourceNameUpper}}BaseSchema = z.object({
+  _id: z.any().optional(), // Usando any para permitir compatibilidad con ObjectId
+{{#each zodTypes}}
+  {{name}}: {{{zodType}}},
+{{/each}}
+{{#if hasTimestamps}}
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+{{/if}}
+{{#if hasSoftDelete}}
+  isDeleted: z.boolean().default(false),
+{{/if}}
+});
+
+// Tipo base para {{resourceNameUpper}}
+export type I{{resourceNameUpper}}Base = z.infer<typeof {{resourceNameUpper}}BaseSchema>;
+
+// Esquema para creación de {{resourceNameUpper}}
+export const Create{{resourceNameUpper}}Schema = {{resourceNameUpper}}BaseSchema
+  .omit({ _id: true{{#if hasTimestamps}}, createdAt: true, updatedAt: true{{/if}} })
+  .extend({
+{{#each zodTypes}}
+{{#if required}}
+    {{name}}: {{{zodType}}},
+{{/if}}
+{{/each}}
+  });
+
+export type ICreate{{resourceNameUpper}} = z.infer<typeof Create{{resourceNameUpper}}Schema>;
+
+// Esquema para actualización de {{resourceNameUpper}} (todos los campos opcionales)
+export const Update{{resourceNameUpper}}Schema = {{resourceNameUpper}}BaseSchema
+  .partial()
+  .omit({ _id: true{{#if hasTimestamps}}, createdAt: true, updatedAt: true{{/if}} });
+
+export type IUpdate{{resourceNameUpper}} = z.infer<typeof Update{{resourceNameUpper}}Schema>;
+
+// Esquema para respuestas (sin campos sensibles)
+export const {{resourceNameUpper}}ResponseSchema = {{resourceNameUpper}}BaseSchema
+{{#if hasSoftDelete}}
+  .omit({ isDeleted: true });
+{{else}}
+  .omit({});
+{{/if}}
+
+export type I{{resourceNameUpper}}Response = z.infer<typeof {{resourceNameUpper}}ResponseSchema>; 
