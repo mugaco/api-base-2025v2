@@ -176,6 +176,7 @@ export class DefaultConsoleService implements ConsoleService {
     formattedMessage += COLORS.reset;
     
     // Imprimir mensaje
+    // eslint-disable-next-line no-console
     console.log(formattedMessage);
   }
 } 

@@ -60,7 +60,7 @@ export class FileUtils {
   /**
    * Escribe un archivo JSON
    */
-  static writeJsonFile(filePath: string, data: any): void {
+  static writeJsonFile(filePath: string, data: unknown): void {
     try {
       const content = JSON.stringify(data, null, 2);
       this.writeFile(filePath, content);

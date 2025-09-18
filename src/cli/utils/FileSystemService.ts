@@ -65,7 +65,7 @@ export class DefaultFileSystemService implements FileSystemService {
    * Lee un archivo JSON
    * @param path Ruta del archivo
    */
-  public async readJsonFile<T = any>(filePath: string): Promise<T> {
+  public async readJsonFile<T = unknown>(filePath: string): Promise<T> {
     try {
       const content = await this.readFile(filePath);
       return JSON.parse(content) as T;
@@ -80,7 +80,7 @@ export class DefaultFileSystemService implements FileSystemService {
    * @param data Datos a escribir
    * @param options Opciones adicionales
    */
-  public async writeJsonFile<T = any>(
+  public async writeJsonFile<T = unknown>(
     filePath: string, 
     data: T, 
     options?: { spaces?: number; overwrite?: boolean }
@@ -226,7 +226,7 @@ export class DefaultFileSystemService implements FileSystemService {
       await fs.promises.mkdir(dirPath, { recursive: true });
     } catch (error) {
       // Ignorar error si el directorio ya existe
-      if ((error as any).code !== 'EEXIST') {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
         throw error;
       }
     }

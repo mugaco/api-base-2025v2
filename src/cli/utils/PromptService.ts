@@ -18,7 +18,7 @@ export class InquirerPromptService implements PromptService {
    * Solicita un valor de entrada
    * @param options Opciones de la pregunta
    */
-  public async prompt<T = any>(options: PromptOptions): Promise<T> {
+  public async prompt<T = unknown>(options: PromptOptions): Promise<T> {
     try {
       // Adaptar las opciones al formato esperado por inquirer
       const question = this.adaptOptions('value', options);
@@ -37,7 +37,7 @@ export class InquirerPromptService implements PromptService {
    * Solicita múltiples valores de entrada
    * @param questions Lista de preguntas
    */
-  public async promptMany<T = Record<string, any>>(
+  public async promptMany<T = Record<string, unknown>>(
     questions: Array<PromptOptions & { name: string }>
   ): Promise<T> {
     try {
@@ -80,7 +80,7 @@ export class InquirerPromptService implements PromptService {
    */
   public async promptCheckbox<T = string[]>(
     message: string,
-    choices: Array<{ name: string; value: any; checked?: boolean }>
+    choices: Array<{ name: string; value: string | number | boolean; checked?: boolean }>
   ): Promise<T> {
     return this.prompt<T>({
       type: 'checkbox',

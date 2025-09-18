@@ -31,7 +31,7 @@ export interface ValidationConstraint {
   /**
    * Valor de la validación
    */
-  value: any;
+  value: unknown;
 
   /**
    * Mensaje de error personalizado
@@ -66,12 +66,12 @@ export interface SchemaField {
   /**
    * Valor por defecto
    */
-  default?: any;
+  default?: unknown;
 
   /**
    * Valores permitidos (para tipo enum)
    */
-  enum?: any[];
+  enum?: string[];
 
   /**
    * Referencia a otro esquema (para tipo reference u objectid)
@@ -96,7 +96,7 @@ export interface SchemaField {
   /**
    * Tipo de los elementos (para arrays)
    */
-  items?: SchemaField | { type: DataType, [key: string]: any };
+  items?: SchemaField | { type: DataType, [key: string]: unknown };
 
   /**
    * Restricciones de validación
@@ -106,12 +106,12 @@ export interface SchemaField {
   /**
    * Metadatos adicionales
    */
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
 
   /**
    * Propiedades extendidas específicas de cada implementación
    */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -160,12 +160,12 @@ export interface Schema {
     /**
      * Opciones de autenticación
      */
-    auth?: boolean | Record<string, any>;
+    auth?: boolean | Record<string, unknown>;
 
     /**
      * Endpoints personalizados
      */
-    endpoints?: Record<string, any>;
+    endpoints?: Record<string, unknown>;
   };
 
   /**
@@ -195,16 +195,16 @@ export interface Schema {
     /**
      * Opciones adicionales para la relación
      */
-    options?: Record<string, any>;
+    options?: Record<string, unknown>;
   }>;
 
   /**
    * Metadatos adicionales
    */
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
 
   /**
    * Propiedades extendidas específicas de cada implementación
    */
-  [key: string]: any;
+  [key: string]: unknown;
 } 

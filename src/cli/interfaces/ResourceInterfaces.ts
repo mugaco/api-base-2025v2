@@ -1,9 +1,33 @@
 /**
  * Interfaces para definir recursos analizados
  */
-import { RouteDefinition } from '../utils/RouterAnalyzer';
-import { ModelDefinition } from '../utils/ModelAnalyzer';
-import { DtoDefinition } from '../utils/DtoAnalyzer';
+
+/**
+ * Definición básica de ruta
+ */
+export interface RouteDefinition {
+  method: string;
+  path: string;
+  handler?: string;
+  middlewares?: string[];
+}
+
+/**
+ * Definición básica de modelo
+ */
+export interface ModelDefinition {
+  name: string;
+  fields: Record<string, unknown>;
+  methods?: string[];
+}
+
+/**
+ * Definición básica de DTO
+ */
+export interface DtoDefinition {
+  name: string;
+  fields: Record<string, unknown>;
+}
 
 /**
  * Representa un recurso completo analizado desde el código
