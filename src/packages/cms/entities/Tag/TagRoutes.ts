@@ -1,10 +1,8 @@
 /**
  * Rutas para Tag
  */
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { TagController } from './TagController';
-import { TagService } from './TagService';
-import { TagRepository } from './TagRepository';
 import validateZodSchema from '@core/middleware/validateZodSchema';
 import { CreateTagSchema, UpdateTagSchema } from './TagSchema';
 import { authenticate } from '@core/middleware/authMiddleware';
@@ -13,13 +11,19 @@ import { authenticate } from '@core/middleware/authMiddleware';
 // Sin locale válido, retorna respuesta completa con array de traducciones
 import { aplanaTagMiddleware } from '@packages/cms/middlewares/aplanaTagMiddleware';
 
-// Instanciar dependencias
-const tagRepository = new TagRepository();
-const tagService = new TagService(tagRepository);
-const tagController = new TagController(tagService);
-
 // Crear el router
 const router = Router();
+/**
+ * Resolver el controller desde el scope del request
+ * Esto permite que cada request tenga su propia instancia de servicios scoped
+ * @throws Error si el scope middleware no está configurado
+ */
+const getTagController = (req: Request): TagController => {
+  if (!req.scope) {
+    throw new Error('Scope middleware not configured. Please add scopeMiddleware to Express app.');
+  }
+  return req.scope.resolve<TagController>('tagController');
+};
 
 /**
  * Definición de rutas para Tag
@@ -29,35 +33,59 @@ const router = Router();
 router.use(authenticate);
 
 // GET /api/tags - Obtener elementos (con o sin paginación según parámetro 'page')
-router.get('/', aplanaTagMiddleware, tagController.get);
+router.get('/', aplanaTagMiddleware, (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.get(req, res, next);
+});
 
 // GET /api/tags/search - Buscar elementos
-router.get('/search', tagController.search);
+router.get('/search', (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.search(req, res, next);
+});
 
 // GET /api/tags/:_id - Obtener un elemento por ID
-router.get('/:_id', aplanaTagMiddleware, tagController.getById);
+router.get('/:_id', aplanaTagMiddleware, (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.getById(req, res, next);
+});
 
 // POST /api/tags - Crear un nuevo elemento
 router.post(
   '/',
   validateZodSchema(CreateTagSchema),
-  tagController.create
+  (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.create(req, res, next);
+}
 );
 
 // PUT /api/tags/:_id - Actualizar un elemento
 router.put(
   '/:_id',
   validateZodSchema(UpdateTagSchema),
-  tagController.update
+  (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.update(req, res, next);
+}
 );
 
 // DELETE /api/tags/:_id - Eliminar un elemento
-router.delete('/:_id', tagController.delete);
+router.delete('/:_id', (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.delete(req, res, next);
+});
 
 // PATCH /api/tags/:_id/soft-delete - Eliminación lógica
-router.patch('/:_id/soft-delete', tagController.softDelete);
+router.patch('/:_id/soft-delete', (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.softDelete(req, res, next);
+});
 
 // PATCH /api/tags/:_id/restore - Restaurar elemento
-router.patch('/:_id/restore', tagController.restore);
+router.patch('/:_id/restore', (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.restore(req, res, next);
+});
 
 export const TagRoutes = router; 

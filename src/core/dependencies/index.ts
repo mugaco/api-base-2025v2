@@ -6,6 +6,7 @@ import { AwilixContainer } from 'awilix';
 import { registerCoreDependencies } from './core.dependencies';
 import { registerDomainDependencies } from './domain.dependencies';
 import { registerEntitiesDependencies } from '@api/dependencies/domain.dependencies';
+import { registerPackagesDependencies } from '@packages/dependencies/packages.dependencies';
 import { registerMiddlewareDependencies } from './middleware.dependencies';
 import { registerExternalDependencies } from './external.dependencies';
 import { Container } from '@core/Container';
@@ -46,6 +47,10 @@ export function registerAllDependencies(container: AwilixContainer): void {
     // 5. Registrar entidades del API
     registerEntitiesDependencies(container);
     logger?.info('✓ Dependencias de entidades API registradas');
+
+    // 6. Registrar packages (CMS y Media)
+    registerPackagesDependencies(container);
+    logger?.info('✓ Dependencias de packages registradas');
 
     logger?.info('✅ Todas las dependencias han sido registradas correctamente');
   } catch (error) {

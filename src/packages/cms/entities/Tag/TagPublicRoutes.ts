@@ -1,21 +1,26 @@
 /**
  * Rutas públicas para Tag (solo lectura con API Key)
  */
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { TagController } from './TagController';
-import { TagService } from './TagService';
-import { TagRepository } from './TagRepository';
 import { apiKeyMiddleware } from '@core/middleware/apiKeyMiddleware';
 // Middleware de aplanación automática de traducciones CMS
 import { aplanaTagMiddleware } from '@packages/cms/middlewares/aplanaTagMiddleware';
 
 // Instanciar dependencias (reutilizamos las mismas instancias)
-const tagRepository = new TagRepository();
-const tagService = new TagService(tagRepository);
-const tagController = new TagController(tagService);
-
 // Crear el router
 const router = Router();
+/**
+ * Resolver el controller desde el scope del request
+ * Esto permite que cada request tenga su propia instancia de servicios scoped
+ * @throws Error si el scope middleware no está configurado
+ */
+const getTagController = (req: Request): TagController => {
+  if (!req.scope) {
+    throw new Error('Scope middleware not configured. Please add scopeMiddleware to Express app.');
+  }
+  return req.scope.resolve<TagController>('tagController');
+};
 
 /**
  * Rutas públicas para Tag - Solo lectura con API Key
@@ -25,12 +30,21 @@ const router = Router();
 router.use(apiKeyMiddleware);
 
 // GET /api/tag-public - Obtener tags públicos
-router.get('/', aplanaTagMiddleware, tagController.get);
+router.get('/', aplanaTagMiddleware, (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.get(req, res, next);
+});
 
 // GET /api/tag-public/search - Buscar tags públicos
-router.get('/search', tagController.search);
+router.get('/search', (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.search(req, res, next);
+});
 
 // GET /api/tag-public/:_id - Obtener un tag por ID
-router.get('/:_id', aplanaTagMiddleware, tagController.getById);
+router.get('/:_id', aplanaTagMiddleware, (req: Request, res: Response, next: NextFunction) => {
+  const controller = getTagController(req);
+  controller.getById(req, res, next);
+});
 
 export const TagPublicRoutes = router;
