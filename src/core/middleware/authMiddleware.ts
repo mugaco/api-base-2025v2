@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { TokenService } from '@core/services/TokenService';
 import { useUnauthorizedError } from '@core/hooks/useError';
 import { IAuthTokenPayload } from '@core/domain/entities/Access/AccessSchema';
+import { setUser } from '@core/hooks/useRequestContext';
 
 // Servicio de tokens
 const tokenService = new TokenService();
@@ -24,12 +25,18 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
         // Añadir usuario al objeto request
         req.user = decoded;
 
+        // NUEVO: Establecer usuario en el contexto de la request
+        setUser(req, decoded._id, decoded.role, {
+          email: decoded.email,
+          username: decoded.username
+        });
+
         // Añadir user_id al body solo en métodos que suelen tener body
         const methodsWithBody = ['POST', 'PUT', 'PATCH', 'DELETE'];
         if (methodsWithBody.includes(req.method) && req.body) {
           req.body.user_id = req.user?._id;
         }
-        
+
         next();
       })
       .catch(error => {

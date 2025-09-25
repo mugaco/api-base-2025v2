@@ -57,7 +57,7 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
    */
   async findAll(filter: FilterQuery<T> = {}, options?: IQueryOptions): Promise<T[]> {
     const combinedFilter = this.applyPermanentFilters(filter);
-    
+
     let query: Query<T[], T> = this.model.find(combinedFilter);
 
     if (options?.projection) {
@@ -105,7 +105,7 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
    */
   async update(_id: string, data: UpdateQuery<T>): Promise<T | null> {
     return this.model.findOneAndUpdate(
-      { ...this.permanentFilters, _id: _id },
+      { _id: _id },
       data,
       { new: true }
     ).exec();
@@ -115,7 +115,7 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
    * Elimina un documento permanentemente
    */
   async delete(_id: string): Promise<boolean> {
-    const result = await this.model.deleteOne({ ...this.permanentFilters, _id: _id }).exec();
+    const result = await this.model.deleteOne({ _id: _id }).exec();
     return result.deletedCount === 1;
   }
 

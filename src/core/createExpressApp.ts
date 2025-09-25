@@ -6,6 +6,8 @@ import { apiRoutes } from '../routes';
 import { Container } from './Container';
 import { ILoggerService } from './services/LoggerService';
 import { scopeMiddleware } from './middleware/scopeMiddleware';
+import { requestContextMiddleware } from './middleware/requestContextMiddleware';
+import { useTransactionId, useCurrentUser, addTransactionData } from '@core/hooks/useRequestContext';
 
 // Interfaces para errores personalizados
 interface ApiError extends Error {
@@ -17,12 +19,15 @@ interface ApiError extends Error {
 
 export function createExpressApp(): Application {
   const app: Application = express();
-  
+
   // Obtener el LoggerService del contenedor
   const logger = Container.resolve<ILoggerService>('loggerService');
 
   // Configuración para confiar en los headers cuando se usa detrás de un proxy como Traefik
   app.set('trust proxy', true);
+
+  // Middleware de contexto de solicitud - IMPORTANTE: debe ser el primero
+  app.use(requestContextMiddleware);
 
   // Middleware básico
   app.use(express.json({ limit: '1mb' }));
@@ -56,19 +61,30 @@ export function createExpressApp(): Application {
     const errorCode = err.code || 'INTERNAL_SERVER_ERROR';
     const isOperational = err.isOperational || false;
     const isDevelopment = process.env.NODE_ENV === 'development';
-    
-    // Log del error usando LoggerService
+
+    // Obtener información del contexto usando los hooks
+    const transactionId = useTransactionId(req);
+    const currentUser = useCurrentUser(req);
+    addTransactionData(req, 'error', err.message);
+    addTransactionData(req, 'errorCode', errorCode);
+    addTransactionData(req, 'errorStatusCode', statusCode);
+
+    // Log del error usando LoggerService con contexto enriquecido
     logger.error(`Error ${statusCode}: ${err.message}`, {
       code: errorCode,
       stack: err.stack,
-      path: req.path
+      path: req.path,
+      transactionId,
+      userId: currentUser?._id,
+      userRole: currentUser?.role
     });
 
-    // Respuesta base
+    // Respuesta base con transactionId
     const errorResponse: Record<string, unknown> = {
       status: 'error',
       code: errorCode,
-      message: isOperational ? err.message : 'Error interno del servidor'
+      message: isOperational ? err.message : 'Error interno del servidor',
+      transactionId
     };
 
     // Añadir los errores detallados si existen

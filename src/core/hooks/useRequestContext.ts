@@ -56,6 +56,17 @@ export function addTransactionData(req: Request, key: string, value: unknown): v
 }
 
 /**
+ * Obtiene un dato específico del contexto de la transacción
+ * @param req Objeto de solicitud Express
+ * @param key Clave del dato a obtener
+ * @returns El valor almacenado o undefined si no existe
+ */
+export function getTransactionDataByKey(req: Request, key: string): unknown {
+  const context = useRequestContext(req);
+  return context.transactionData[key];
+}
+
+/**
  * Establece la información del usuario en el contexto actual
  * @param req Objeto de solicitud Express
  * @param userId ID del usuario
