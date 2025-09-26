@@ -3,9 +3,11 @@
  */
 import { Router, Request, Response, NextFunction } from 'express';
 import { PruebaController } from './PruebaController';
+import { authenticate } from '@core/middleware/authMiddleware';
 
 // Crear el router
 const router = Router();
+router.use(authenticate);
 
 /**
  * Resolver el controller desde el scope del request

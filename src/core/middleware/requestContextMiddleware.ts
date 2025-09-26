@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Container } from '@core/Container';
 import { ILoggerService } from '@core/services/LoggerService';
 import { v4 as uuidv4 } from 'uuid';
-import { addTransactionData, useTransactionId, useCurrentUser, getTransactionDataByKey } from '@core/hooks/useRequestContext';
+import { addTransactionData, useTransactionId, useCurrentUser } from '@core/hooks/useRequestContext';
 
 
 /**
@@ -83,14 +83,46 @@ export function requestContextMiddleware(req: Request, res: Response, next: Next
     const currentUser = useCurrentUser(req);
     const activity = req.scope?.resolve('activity');
 
-    // Registrar información de la transacción completada usando datos del contexto
-    loggerService.info(`Transacción completada: ${req.method} ${req.path}`, {
+    // Determinar si hay payload (body) relevante
+    const hasPayload = ['POST', 'PUT', 'PATCH'].includes(req.method) && req.body && Object.keys(req.body).length > 0;
+
+    // Determinar si hay query params
+    const hasQuery = req.query && Object.keys(req.query).length > 0;
+
+    // Determinar si hay route params
+    const hasParams = req.params && Object.keys(req.params).length > 0;
+
+    // Registrar información de la transacción completada
+    const logData: Record<string, unknown> = {
       transactionId: useTransactionId(req),
-      statusCode: getTransactionDataByKey(req, 'responseStatusCode'),
-      duration: getTransactionDataByKey(req, 'responseDuration'),
+      statusCode: res.statusCode,
+      duration: `${durationMs.toFixed(2)}ms`,
       userId: currentUser?._id,
-      activity: activity.get()
-    });
+      userRole: currentUser?.role,
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+      activity: activity ? activity.get() : []
+    };
+
+    // Añadir payload si existe (para POST, PUT, PATCH)
+    if (hasPayload) {
+      // Filtrar información sensible del body
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...safeBody } = req.body;
+      logData.payload = safeBody;
+    }
+
+    // Añadir query params si existen
+    if (hasQuery) {
+      logData.query = req.query;
+    }
+
+    // Añadir route params si existen
+    if (hasParams) {
+      logData.params = req.params;
+    }
+
+    loggerService.info(`Transacción completada: ${req.method} ${req.path}`, logData);
   });
 
   next();

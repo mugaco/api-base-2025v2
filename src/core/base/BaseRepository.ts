@@ -5,6 +5,7 @@ import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.inte
 import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
 import { MongoQueryBuilder } from '@core/base/queryBuilder/MongoQueryBuilder';
 import { ILoggerService } from '@core/services/LoggerService';
+import { useNotFoundError } from '@core/hooks/useError';
 
 // import { Container } from '@core/Container';
 import { ActivityLog } from '@core/ActivityLog';
@@ -102,24 +103,119 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
    * Crea un nuevo documento
    */
   async create(data: Partial<T>): Promise<T> {
+    const activityData = {
+      activity: 'create',
+      resource: this.model.modelName,
+      data
+    };
+    this.activity.push(activityData);
     return this.model.create(data);
   }
 
   /**
+   * Compara datos antes y después de una actualización
+   * Retorna los campos que cambiaron con sus valores old/new
+   */
+  protected compareData(oldData: T, newData: T): {
+    changedFields: string[];
+    changes: Record<string, { old: unknown; new: unknown }>;
+  } {
+    const changes: Record<string, { old: unknown; new: unknown }> = {};
+    const changedFields: string[] = [];
+
+    // Convertir documentos Mongoose a objetos planos para comparación
+    const oldObj = oldData.toObject ? oldData.toObject() : oldData;
+    const newObj = newData.toObject ? newData.toObject() : newData;
+
+    // Comparar cada campo del nuevo objeto
+    for (const key in newObj) {
+      // Ignorar campos del sistema y timestamps
+      if (['_id', '__v', 'createdAt', 'updatedAt'].includes(key)) {
+        continue;
+      }
+
+      const oldValue = oldObj[key];
+      const newValue = newObj[key];
+
+      // Comparación profunda para objetos y arrays
+      const hasChanged = JSON.stringify(oldValue) !== JSON.stringify(newValue);
+
+      if (hasChanged) {
+        changedFields.push(key);
+        changes[key] = {
+          old: oldValue,
+          new: newValue
+        };
+      }
+    }
+
+    return { changedFields, changes };
+  }
+
+  /**
    * Actualiza un documento por su ID
+   * Registra los cambios en el ActivityLog
    */
   async update(_id: string, data: UpdateQuery<T>): Promise<T | null> {
+    // Obtener el documento antes de actualizar
+    const oldDocument = await this.model.findById(_id).exec();
+
+    if (!oldDocument) {
+      throw useNotFoundError(`Resource with _id ${_id} not found`);
+    }
+
+    // Realizar la actualización
+    const newDocument = await this._update(_id, data);
+
+    if (!newDocument) {
+      return null;
+    }
+
+    // Comparar y registrar cambios
+    const { changedFields, changes } = this.compareData(oldDocument, newDocument);
+
+    const activityData = {
+      resource: this.model.modelName,
+      activity: 'update',
+      id: _id,
+      changedFields,
+      changes,
+      oldData: oldDocument.toObject(),
+      newData: newDocument.toObject()
+    };
+
+    this.activity.push(activityData);
+
+    return newDocument;
+  }
+
+  /**
+   * Método interno para actualización sin tracking
+   * Usado por softDelete y restore para evitar duplicación de logs
+   */
+  async _update(_id: string, data: UpdateQuery<T>): Promise<T | null> {
     return this.model.findOneAndUpdate(
       { _id: _id },
       data,
       { new: true }
     ).exec();
   }
-
   /**
    * Elimina un documento permanentemente
    */
   async delete(_id: string): Promise<boolean> {
+    const deleted = await this.model.findById(_id).exec();
+    if (!deleted) {
+      throw useNotFoundError(`Resource with _id ${_id} not found`);
+    }
+
+    const activityData = {
+      resource: this.model.modelName,
+      activity: 'delete',
+      id: _id,
+      deletedData: deleted
+    };
+    this.activity.push(activityData);
     const result = await this.model.deleteOne({ _id: _id }).exec();
     return result.deletedCount === 1;
   }
@@ -128,20 +224,52 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
    * Elimina un documento de forma lógica
    */
   async softDelete(_id: string): Promise<T | null> {
-    return this.update(
+    // Obtener el documento antes de soft delete
+    const document = await this.model.findById(_id).exec();
+
+    if (!document) {
+      throw useNotFoundError(`Resource with _id ${_id} not found`);
+    }
+
+    const result = await this._update(
       _id,
       { $set: { isDeleted: true, deletedAt: new Date() } } as UpdateQuery<T>
     );
+
+    this.activity.push({
+      resource: this.model.modelName,
+      activity: 'softDelete',
+      id: _id,
+      deletedData: document.toObject()
+    });
+
+    return result;
   }
 
   /**
    * Restaura un documento eliminado lógicamente
    */
   async restore(_id: string): Promise<T | null> {
-    return this.update(
+    // Obtener el documento antes de restaurar
+    const document = await this.model.findById(_id).exec();
+
+    if (!document) {
+      throw useNotFoundError(`Resource with _id ${_id} not found`);
+    }
+
+    const result = await this._update(
       _id,
       { $set: { isDeleted: false }, $unset: { deletedAt: 1 } } as UpdateQuery<T>
     );
+
+    this.activity.push({
+      resource: this.model.modelName,
+      activity: 'restore',
+      id: _id,
+      restoredData: result ? result.toObject() : null
+    });
+
+    return result;
   }
 
   /**
