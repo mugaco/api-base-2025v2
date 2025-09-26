@@ -206,13 +206,12 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
   }
 
   /**
-   * Extrae los filtros avanzados de la solicitud HTTP
+   * Extrae los filtros de la solicitud HTTP
    */
-  protected extractAdvancedFilters(req: Request): { advancedFilters?: string } {
-    // Buscar primero 'advancedFilters', si no existe buscar 'filters'
-    const filters = req.query.advancedFilters || req.query.filters;
+  protected extractFilters(req: Request): { filters?: string } {
+    const filters = req.query.filters;
     return {
-      advancedFilters: filters as string
+      filters: filters as string
     };
   }
 
@@ -253,21 +252,19 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
    * Método unificado para manejar solicitudes GET con o sin paginación
    * Determina automáticamente si usar paginación basado en la presencia del parámetro 'page'
    * Si no se especifica paginación, aplica un límite máximo de 100 registros por seguridad
-   * 
+   *
    * @param req - Objeto de solicitud de Express con parámetros de consulta (ver IGetQueryParams)
    * @param res - Objeto de respuesta de Express
-   * @param buildQueryFn - Función para construir el objeto de consulta basado en los parámetros
    */
   protected async handleGetRequest(
     req: Request,
-    res: Response,
-    buildQueryFn: (req: Request) => FilterQuery
+    res: Response
   ): Promise<void> {
-    // Construir la consulta base
-    const baseQuery = buildQueryFn(req);
+    // Consulta base vacía - solo usamos filters y simpleSearch
+    const baseQuery: FilterQuery = {};
     const queryParams = req.query as unknown as IGetQueryParams;
-    const advancedFiltersInfo = this.extractAdvancedFilters(req);
-    
+    const filtersInfo = this.extractFilters(req);
+
     try {
       // Procesar simpleSearch si existe
       let finalQuery = baseQuery;
@@ -288,12 +285,12 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
         const paginationParams = this.extractPaginationParams(req);
         const options = this.extractQueryOptions(req);
         
-        const result = advancedFiltersInfo.advancedFilters && this.service.getPaginatedWithFilters
+        const result = filtersInfo.filters && this.service.getPaginatedWithFilters
           ? await this.service.getPaginatedWithFilters(
-              finalQuery, 
-              paginationParams, 
+              finalQuery,
+              paginationParams,
               options,
-              advancedFiltersInfo.advancedFilters
+              filtersInfo.filters
             )
           : await this.service.getPaginated(finalQuery, paginationParams, options);
         
@@ -308,12 +305,12 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
         };
         const options = this.extractQueryOptions(req);
         
-        const result = advancedFiltersInfo.advancedFilters && this.service.getPaginatedWithFilters
+        const result = filtersInfo.filters && this.service.getPaginatedWithFilters
           ? await this.service.getPaginatedWithFilters(
-              finalQuery, 
-              safetyPaginationParams, 
+              finalQuery,
+              safetyPaginationParams,
               options,
-              advancedFiltersInfo.advancedFilters
+              filtersInfo.filters
             )
           : await this.service.getPaginated(finalQuery, safetyPaginationParams, options);
         
@@ -361,19 +358,14 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
     }
   }
 
-  /**
-   * Método abstracto que debe ser implementado por las clases hijas
-   * para construir la query específica de cada recurso
-   */
-  protected abstract buildQuery(req: Request): FilterQuery;
 
   // Métodos CRUD estándar que pueden ser sobrescritos por las clases hijas
 
   getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const query = this.buildQuery(req);
-      const items = await this.service.getAll(query);
-      
+      // Solo usar filtros avanzados - no buildQuery
+      const items = await this.service.getAll({});
+
       this.sendSuccessResponse(res, items);
     } catch (error) {
       next(error);
@@ -383,15 +375,11 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
   /**
    * Método unificado que maneja tanto las solicitudes getAll como getPaginated
    * basado en la presencia del parámetro 'page'
-   * También procesa filtros avanzados si existen
+   * Procesa filtros avanzados y búsqueda simple
    */
   get = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      await this.handleGetRequest(
-        req, 
-        res, 
-        this.buildQuery.bind(this)
-      );
+      await this.handleGetRequest(req, res);
     } catch (error) {
       next(error);
     }
@@ -472,12 +460,12 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
 
   getPaginated = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const query = this.buildQuery(req);
+      // Solo usar filtros avanzados - no buildQuery
       const paginationParams = this.extractPaginationParams(req);
       const options = this.extractQueryOptions(req);
-      
-      const result = await this.service.getPaginated(query, paginationParams, options);
-      
+
+      const result = await this.service.getPaginated({}, paginationParams, options);
+
       this.sendSuccessResponse(res, result);
     } catch (error) {
       next(error);

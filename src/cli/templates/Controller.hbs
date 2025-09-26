@@ -1,7 +1,6 @@
 /**
  * Controlador para {{resourceNameUpper}}
  */
-import { Request } from 'express';
 import { BaseController } from '@core/base/BaseController';
 import { {{resourceNameUpper}}Service } from './{{resourceNameUpper}}Service';
 
@@ -11,26 +10,6 @@ import { {{resourceNameUpper}}Service } from './{{resourceNameUpper}}Service';
 export class {{resourceNameUpper}}Controller extends BaseController<{{resourceNameUpper}}Service> {
   constructor({{resourceNameLower}}Service: {{resourceNameUpper}}Service) {
     super({{resourceNameLower}}Service);
-  }
-
-  /**
-   * Construye la query específica para {{resourceNameUpper}}
-   * Este método es requerido por BaseController
-   */
-  protected buildQuery(req: Request): Record<string, unknown> {
-    const query: Record<string, unknown> = {};
-
-    // Añadir filtros específicos del recurso aquí
-    {{#if hasSoftDelete}}
-    // Por defecto, mostrar solo elementos no eliminados
-    if (req.query.isDeleted === undefined) {
-      query.isDeleted = false;
-    } else {
-      query.isDeleted = req.query.isDeleted === 'true';
-    }
-    {{/if}}
-
-    return query;
   }
 
   // Aquí puedes sobrescribir cualquier método de BaseController si necesitas

@@ -21,24 +21,7 @@ export class PublicationController extends BaseController<PublicationService> {
     super(publicationService);
   }
 
-  /**
-   * Construye la query específica para Publication
-   * Este método es requerido por BaseController
-   */
-  protected buildQuery(req: Request): Record<string, unknown> {
-    const query: Record<string, unknown> = {};
-
-    // Añadir filtros específicos del recurso aquí
-    // Por defecto, mostrar solo elementos no eliminados
-    if (req.query.isDeleted === undefined) {
-      query.isDeleted = false;
-    } else {
-      query.isDeleted = req.query.isDeleted === 'true';
-    }
-
-    return query;
-  }
-
+  // MÉTODOS ESPECÍFICOS DE LA ENTIDAD
   getBySlug = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const slug = req.params.slug;

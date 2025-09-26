@@ -13,24 +13,7 @@ export class CategoryController extends BaseController<CategoryService> {
     super(categoryService);
   }
 
-  /**
-   * Construye la query específica para Category
-   * Este método es requerido por BaseController
-   */
-  protected buildQuery(req: Request): Record<string, unknown> {
-    const query: Record<string, unknown> = {};
-
-    // Añadir filtros específicos del recurso aquí
-    // Por defecto, mostrar solo elementos no eliminados
-    if (req.query.isDeleted === undefined) {
-      query.isDeleted = false;
-    } else {
-      query.isDeleted = req.query.isDeleted === 'true';
-    }
-
-    return query;
-  }
-
+  // MÉTODOS ESPECÍFICOS DE LA ENTIDAD
   search = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const searchTerm = req.query.term as string;
