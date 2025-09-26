@@ -37,7 +37,7 @@ router.get('/', (req: Request, res: Response, next: NextFunction) => {
 // GET /api/access/:_id - Obtener acceso por ID
 router.get('/:_id', (req: Request, res: Response, next: NextFunction) => {
   const controller = getAccessController(req);
-  controller.getById(req, res, next);
+  controller.findById(req, res, next);
 });
 
 // DELETE /api/access/:_id - Eliminar acceso

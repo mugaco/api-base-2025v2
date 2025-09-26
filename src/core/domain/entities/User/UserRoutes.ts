@@ -46,7 +46,7 @@ router.get('/', authenticate, authorize, (req: Request, res: Response, next: Nex
 
 router.get('/:_id', authenticate, authorize, (req: Request, res: Response, next: NextFunction) => {
   const controller = getUserController(req);
-  controller.getById(req, res, next);
+  controller.findById(req, res, next);
 });
 
 router.post('/', authenticate, authorize, validateZodSchema(CreateUserSchema), (req: Request, res: Response, next: NextFunction) => {

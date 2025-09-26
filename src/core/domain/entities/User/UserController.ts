@@ -63,7 +63,7 @@ export class UserController extends BaseController<UserService> {
         return this.sendErrorResponse(res, 'Usuario no autenticado', 401);
       }
 
-      const user = await this.service.getById(req.user._id);
+      const user = await this.service.findById(req.user._id);
 
       this.sendSuccessResponse(res, user);
     } catch (error) {

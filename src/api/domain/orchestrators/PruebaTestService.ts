@@ -6,9 +6,9 @@ import { PruebaService } from '../entities/Prueba/PruebaService';
 import { TestService } from '../entities/Test/TestService';
 
 export interface IPruebaTestMerged {
-  prueba: any;
-  test: any;
-  merged: any;
+  prueba: unknown;
+  test: unknown;
+  merged: unknown;
 }
 
 /**
@@ -26,8 +26,8 @@ export class PruebaTestService {
   async findDoble(pruebaId: string, testId: string): Promise<IPruebaTestMerged> {
     // Buscar ambas entidades en paralelo
     const [prueba, test] = await Promise.all([
-      this.pruebaService.getById(pruebaId),
-      this.pruebaService.getById(testId),
+      this.pruebaService.findById(pruebaId),
+      this.pruebaService.findById(testId),
       // this.testService.testx() // TestService no tiene findById, uso el método disponible
     ]);
 

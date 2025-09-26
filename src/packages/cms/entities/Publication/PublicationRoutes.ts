@@ -65,7 +65,7 @@ router.get('/search', (req: Request, res: Response, next: NextFunction) => {
 // GET /api/publication/:_id - Obtener un elemento por ID
 router.get('/:_id', aplanaPublicationMiddleware, (req: Request, res: Response, next: NextFunction) => {
   const controller = getPublicationController(req);
-  controller.getById(req, res, next);
+  controller.findById(req, res, next);
 });
 
 // GET /api/publication/get-publication-media/:publication_id - Obtener media de una publicación

@@ -38,7 +38,7 @@ router.get('/', aplanaPublicationMiddleware, (req: Request, res: Response, next:
 // GET /api/publication-public/:_id - Obtener una publicación por ID
 router.get('/:_id', aplanaPublicationMiddleware, (req: Request, res: Response, next: NextFunction) => {
   const controller = getPublicationController(req);
-  controller.getById(req, res, next);
+  controller.findById(req, res, next);
 });
 
 // GET /api/publication-public/slug/:slug - Obtener una publicación por slug

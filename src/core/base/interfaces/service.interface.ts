@@ -9,7 +9,7 @@ export type FilterQuery = Record<string, unknown>;
 
 export interface IService<T, CreateDTO, UpdateDTO> {
   getAll(query?: FilterQuery, options?: IQueryOptions): Promise<T[]>;
-  getById(_id: string): Promise<T>;
+  findById(_id: string): Promise<T>;
   findOne(query: FilterQuery): Promise<T | null>;
   create(data: CreateDTO): Promise<T>;
   update(_id: string, data: UpdateDTO): Promise<T>;

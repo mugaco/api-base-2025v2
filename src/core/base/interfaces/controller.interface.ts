@@ -19,7 +19,7 @@ export interface IController {
   /**
    * Obtiene un recurso por su ID
    */
-  getById: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+  findById: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
   /**
    * Crea un nuevo recurso

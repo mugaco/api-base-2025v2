@@ -44,7 +44,7 @@ router.get('/search', (req: Request, res: Response, next: NextFunction) => {
 // GET /api/menu-public/:_id - Obtener un menú por ID
 router.get('/:_id', aplanaMenuMiddleware, (req: Request, res: Response, next: NextFunction) => {
   const controller = getMenuController(req);
-  controller.getById(req, res, next);
+  controller.findById(req, res, next);
 });
 
 export const MenuPublicRoutes = router;

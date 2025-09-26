@@ -35,7 +35,7 @@ export abstract class BaseService<
   /**
    * Obtiene un elemento por su ID
    */
-  async getById(_id: string): Promise<TResponse> {
+  async findById(_id: string): Promise<TResponse> {
     const result = await this.repository.findById(_id);
     if (!result) {
       throw new Error(`Resource with _id ${_id} not found`);

@@ -3,15 +3,15 @@
  */
 import { BaseRepository } from '@core/base/BaseRepository';
 import { IPublication, PublicationModel } from './PublicationModel';
-import { RequestContext } from '@core/RequestContext';
+import { ActivityLog } from '@core/ActivityLog';
 import { ILoggerService } from '@core/services/LoggerService';
 
 /**
  * Repositorio para la entidad Publication heredando de BaseRepository
  */
 export class PublicationRepository extends BaseRepository<IPublication> {
-  constructor(context: RequestContext, loggerService: ILoggerService) {
-    super(PublicationModel, context, loggerService);
+  constructor(activity: ActivityLog, loggerService: ILoggerService) {
+    super(PublicationModel, activity, loggerService);
 
     // Definir filtros permanentes específicos para esta entidad si es necesario
     // Por ejemplo:

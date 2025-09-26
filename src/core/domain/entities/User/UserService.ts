@@ -25,10 +25,10 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
   }
   
   /**
-   * Sobrescribe getById para aplicar transformación
+   * Sobrescribe findById para aplicar transformación
    */
-  async getById(_id: string): Promise<IUserResponse> {
-    const user = await super.getById(_id);
+  async findById(_id: string): Promise<IUserResponse> {
+    const user = await super.findById(_id);
     return userToResponse(user as unknown as IUserModel);
   }
   

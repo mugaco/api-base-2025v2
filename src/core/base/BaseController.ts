@@ -397,10 +397,10 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
     }
   };
 
-  getById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  findById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const _id = req.params._id;
-      const item = await this.service.getById(_id);
+      const item = await this.service.findById(_id);
       
       this.sendSuccessResponse(res, item);
     } catch (error) {

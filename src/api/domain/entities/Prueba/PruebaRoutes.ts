@@ -34,7 +34,7 @@ router.get('/', (req: Request, res: Response, next: NextFunction) => {
 // GET /api/pruebas/:_id - Obtener un elemento por ID
 router.get('/:_id', (req: Request, res: Response, next: NextFunction) => {
   const controller = getPruebaController(req);
-  controller.getById(req, res, next);
+  controller.findById(req, res, next);
 });
 
 // POST /api/pruebas - Crear un nuevo elemento

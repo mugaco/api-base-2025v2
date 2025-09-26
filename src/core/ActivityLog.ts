@@ -1,4 +1,4 @@
-export class RequestContext {
+export class ActivityLog {
   private actions: unknown[] = [];
 
   get(): unknown[] {

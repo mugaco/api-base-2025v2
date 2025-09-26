@@ -3,15 +3,15 @@
  */
 import { BaseRepository } from '@core/base/BaseRepository';
 import { ICategory, CategoryModel } from './CategoryModel';
-import { RequestContext } from '@core/RequestContext';
+import { ActivityLog } from '@core/ActivityLog';
 import { ILoggerService } from '@core/services/LoggerService';
 
 /**
  * Repositorio para la entidad Category heredando de BaseRepository
  */
 export class CategoryRepository extends BaseRepository<ICategory> {
-  constructor(context: RequestContext, loggerService: ILoggerService) {
-    super(CategoryModel, context, loggerService);
+  constructor(activity: ActivityLog, loggerService: ILoggerService) {
+    super(CategoryModel, activity, loggerService);
 
     // Definir filtros permanentes específicos para esta entidad si es necesario
     // Por ejemplo:

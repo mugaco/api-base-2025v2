@@ -74,7 +74,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }
 
   async getPublicationMedia(publication_id: string): Promise<IMediaPublication> {
-    const publication = await this.getById(publication_id);
+    const publication = await this.findById(publication_id);
     
     // Inicializar respuesta
     const result: IMediaPublication = {
@@ -85,7 +85,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
     // Obtener imagen destacada
     if (publication.media_id) {
       try {
-        result.featured = await this.mediaService.getById(publication.media_id.toString());
+        result.featured = await this.mediaService.findById(publication.media_id.toString());
       } catch (error: unknown) {
         // Si no encuentra la imagen destacada, mantener como null
         this.logger.debug('Imagen destacada no encontrada', { publicationId: publication_id, mediaId: publication.media_id, error });
@@ -288,7 +288,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }> {
     try {
       // Verificar que la publicación existe
-      const publication = await this.getById(_id);
+      const publication = await this.findById(_id);
 
       // Buscar la traducción existente para este idioma
       const existingTranslationIndex = publication.publications.findIndex(p => p.locale === locale);
@@ -371,7 +371,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }> {
     try {
       // Verificar que la publicación existe
-      const publication = await this.getById(_id);
+      const publication = await this.findById(_id);
 
       // Verificar que el idioma no existe ya
       const existingTranslation = publication.publications.find(p => p.locale === locale);
@@ -446,7 +446,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }> {
     try {
       // Verificar que la publicación existe
-      const publication = await this.getById(_id);
+      const publication = await this.findById(_id);
 
       // Verificar que no sea el idioma por defecto
       if (publication.default_locale === locale) {
@@ -475,7 +475,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
       }
 
       // Obtener publicación actualizada para devolver idiomas restantes
-      const refreshedPublication = await this.getById(_id);
+      const refreshedPublication = await this.findById(_id);
       const remainingLocales = refreshedPublication.publications.map(p => p.locale);
 
       return {
@@ -499,7 +499,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }> {
     try {
       // Verificar que la publicación existe
-      const publication = await this.getById(_id);
+      const publication = await this.findById(_id);
 
       // Verificar que el idioma existe en la publicación
       const translationIndex = publication.publications.findIndex(p => p.locale === locale);
@@ -569,7 +569,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }> {
     try {
       // Verificar que la publicación existe
-      const publication = await this.getById(_id);
+      const publication = await this.findById(_id);
       const previousStatus = publication.status;
 
       // Si se cambia a 'published', validar que al menos una traducción esté publicada
@@ -625,7 +625,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }> {
     try {
       // Verificar que la publicación existe
-      const publication = await this.getById(_id);
+      const publication = await this.findById(_id);
       const previousType = publication.type;
 
       // Actualizar el tipo
@@ -665,7 +665,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }> {
     try {
       // Verificar que la publicación existe
-      const publication = await this.getById(_id);
+      const publication = await this.findById(_id);
       const previousCategories = publication.category_ids?.map(id => id.toString()) || [];
 
       // Calcular cambios
@@ -711,7 +711,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }> {
     try {
       // Verificar que la publicación existe
-      const publication = await this.getById(_id);
+      const publication = await this.findById(_id);
       const previousTags = publication.tag_ids?.map(id => id.toString()) || [];
 
       // Calcular cambios
@@ -755,7 +755,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }> {
     try {
       // Verificar que la publicación existe
-      const publication = await this.getById(_id);
+      const publication = await this.findById(_id);
       
       // Almacenar el valor anterior
       const previousFeaturedImage = publication.media_id?.toString() || null;
@@ -802,7 +802,7 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   }> {
     try {
       // Verificar que la publicación existe
-      const publication = await this.getById(_id);
+      const publication = await this.findById(_id);
       
       // Almacenar los valores anteriores
       const previousGallery = publication.media_ids?.map(id => id.toString()) || [];

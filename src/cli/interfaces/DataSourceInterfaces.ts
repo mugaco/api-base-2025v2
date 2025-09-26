@@ -49,7 +49,7 @@ export interface RouteMiddlewareConfig {
 
 export interface RoutesMiddlewares {
   getAll: RouteMiddlewareConfig;
-  getById: RouteMiddlewareConfig;
+  findById: RouteMiddlewareConfig;
   create: RouteMiddlewareConfig;
   update: RouteMiddlewareConfig;
   delete: RouteMiddlewareConfig;

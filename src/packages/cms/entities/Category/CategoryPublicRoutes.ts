@@ -44,7 +44,7 @@ router.get('/search', (req: Request, res: Response, next: NextFunction) => {
 // GET /api/category-public/:_id - Obtener una categoría por ID
 router.get('/:_id', aplanaCategoryMiddleware, (req: Request, res: Response, next: NextFunction) => {
   const controller = getCategoryController(req);
-  controller.getById(req, res, next);
+  controller.findById(req, res, next);
 });
 
 export const CategoryPublicRoutes = router;

@@ -32,10 +32,10 @@ export class AccessService extends BaseService<IAccess, IAccessBase, ICreateAcce
   }
 
   /**
-   * Sobrescribe getById para aplicar transformación
+   * Sobrescribe findById para aplicar transformación
    */
-  async getById(_id: string): Promise<IAccessBase> {
-    const access = await super.getById(_id);
+  async findById(_id: string): Promise<IAccessBase> {
+    const access = await super.findById(_id);
     return accessToResponse(access as unknown as IAccess);
   }
 

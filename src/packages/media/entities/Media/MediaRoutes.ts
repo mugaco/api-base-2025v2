@@ -44,7 +44,7 @@ router.get('/search', (req: Request, res: Response, next: NextFunction) => {
 // GET /api/media/:_id - Obtener un elemento por ID
 router.get('/:_id', (req: Request, res: Response, next: NextFunction) => {
   const controller = getMediaController(req);
-  controller.getById(req, res, next);
+  controller.findById(req, res, next);
 });
 
 // PUT /api/media/:_id - Actualizar un elemento

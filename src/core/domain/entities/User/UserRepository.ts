@@ -1,15 +1,15 @@
 import { FilterQuery } from 'mongoose';
 import { BaseRepository } from '@core/base/BaseRepository';
 import { IUserModel, UserModel } from './UserModel';
-import { RequestContext } from '@core/RequestContext';
+import { ActivityLog } from '@core/ActivityLog';
 import { ILoggerService } from '@core/services/LoggerService';
 
 /**
  * Repositorio para la entidad User heredando de BaseRepository
  */
 export class UserRepository extends BaseRepository<IUserModel> {
-  constructor(context: RequestContext, loggerService: ILoggerService) {
-    super(UserModel, context, loggerService);
+  constructor(activity: ActivityLog, loggerService: ILoggerService) {
+    super(UserModel, activity, loggerService);
 
     // Definir filtros permanentes específicos para esta entidad
     this.permanentFilters = {
