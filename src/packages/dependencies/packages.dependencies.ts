@@ -67,49 +67,49 @@ export function registerPackagesDependencies(_container: AwilixContainer): void 
   // ========================================
 
   // Publication
-  Container.register('publicationRepository').asClass(PublicationRepository).singleton();
-  Container.register('publicationService').asClass(PublicationService).singleton();
-  Container.register('publicationController').asClass(PublicationController).singleton();
+  Container.register('publicationRepository').asClass(PublicationRepository).scoped();
+  Container.register('publicationService').asClass(PublicationService).scoped();
+  Container.register('publicationController').asClass(PublicationController).scoped();
 
   // Category
-  Container.register('categoryRepository').asClass(CategoryRepository).singleton();
-  Container.register('categoryService').asClass(CategoryService).singleton();
-  Container.register('categoryController').asClass(CategoryController).singleton();
+  Container.register('categoryRepository').asClass(CategoryRepository).scoped();
+  Container.register('categoryService').asClass(CategoryService).scoped();
+  Container.register('categoryController').asClass(CategoryController).scoped();
 
   // Menu
-  Container.register('menuRepository').asClass(MenuRepository).singleton();
-  Container.register('menuService').asClass(MenuService).singleton();
-  Container.register('menuController').asClass(MenuController).singleton();
+  Container.register('menuRepository').asClass(MenuRepository).scoped();
+  Container.register('menuService').asClass(MenuService).scoped();
+  Container.register('menuController').asClass(MenuController).scoped();
 
   // Tag
-  Container.register('tagRepository').asClass(TagRepository).singleton();
-  Container.register('tagService').asClass(TagService).singleton();
-  Container.register('tagController').asClass(TagController).singleton();
+  Container.register('tagRepository').asClass(TagRepository).scoped();
+  Container.register('tagService').asClass(TagService).scoped();
+  Container.register('tagController').asClass(TagController).scoped();
 
   // CMS Config (no tiene servicio, solo controller)
-  Container.register('cmsConfigController').asClass(CMSConfigController).singleton();
+  Container.register('cmsConfigController').asClass(CMSConfigController).scoped();
 
   // ========================================
   // Media Package
   // ========================================
 
   // Media
-  Container.register('mediaRepository').asClass(MediaRepository).singleton();
-  Container.register('mediaService').asClass(MediaService).singleton();
-  Container.register('mediaController').asClass(MediaController).singleton();
+  Container.register('mediaRepository').asClass(MediaRepository).scoped();
+  Container.register('mediaService').asClass(MediaService).scoped();
+  Container.register('mediaController').asClass(MediaController).scoped();
 
   // Library
-  Container.register('libraryRepository').asClass(LibraryRepository).singleton();
-  Container.register('libraryService').asClass(LibraryService).singleton();
-  Container.register('libraryController').asClass(LibraryController).singleton();
+  Container.register('libraryRepository').asClass(LibraryRepository).scoped();
+  Container.register('libraryService').asClass(LibraryService).scoped();
+  Container.register('libraryController').asClass(LibraryController).scoped();
 
   // LibraryTag
-  Container.register('libraryTagRepository').asClass(LibraryTagRepository).singleton();
-  Container.register('libraryTagService').asClass(LibraryTagService).singleton();
-  Container.register('libraryTagController').asClass(LibraryTagController).singleton();
+  Container.register('libraryTagRepository').asClass(LibraryTagRepository).scoped();
+  Container.register('libraryTagService').asClass(LibraryTagService).scoped();
+  Container.register('libraryTagController').asClass(LibraryTagController).scoped();
 
   // MediaTag
-  Container.register('mediaTagRepository').asClass(MediaTagRepository).singleton();
-  Container.register('mediaTagService').asClass(MediaTagService).singleton();
-  Container.register('mediaTagController').asClass(MediaTagController).singleton();
+  Container.register('mediaTagRepository').asClass(MediaTagRepository).scoped();
+  Container.register('mediaTagService').asClass(MediaTagService).scoped();
+  Container.register('mediaTagController').asClass(MediaTagController).scoped();
 }

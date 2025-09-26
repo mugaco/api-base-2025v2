@@ -8,7 +8,7 @@ import { LoggerService } from '@core/services/LoggerService';
 import { ImageTransformationService } from '@core/services/ImageService';
 import { StorageService } from '@core/services/StorageService';
 import { UploadService } from '@core/services/UploadService';
-
+import { RequestContext } from '../RequestContext';
 export function registerCoreDependencies(_container: AwilixContainer): void {
   // Configuraciones básicas
   Container.register('config').asValue({
@@ -48,4 +48,5 @@ export function registerCoreDependencies(_container: AwilixContainer): void {
   // - HealthCheckService
   // - ConfigService (más elaborado)
   // - EventBus
+  Container.register('context').asClass(RequestContext).singleton();
 }

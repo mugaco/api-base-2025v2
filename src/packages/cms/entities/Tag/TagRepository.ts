@@ -3,13 +3,15 @@
  */
 import { BaseRepository } from '@core/base/BaseRepository';
 import { ITag, TagModel } from './TagModel';
+import { RequestContext } from '@core/RequestContext';
+import { ILoggerService } from '@core/services/LoggerService';
 
 /**
  * Repositorio para la entidad Tag heredando de BaseRepository
  */
 export class TagRepository extends BaseRepository<ITag> {
-  constructor() {
-    super(TagModel);
+  constructor(context: RequestContext, loggerService: ILoggerService) {
+    super(TagModel, context, loggerService);
 
     // Definir filtros permanentes específicos para esta entidad si es necesario
     // Por ejemplo:

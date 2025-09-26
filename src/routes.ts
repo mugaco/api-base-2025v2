@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PruebaRoutes } from '@api/domain/entities/Prueba/PruebaRoutes';
 import { TestRoutes } from '@api/domain/entities/Test/TestRoutes';
+import { pruebaTestRoutes } from '@api/domain/orchestrators/PruebaTestRoutes';
 
 // Core domain routes
 import { UserRoutes } from '@core/domain/entities/User/UserRoutes';
@@ -35,6 +36,7 @@ router.use('/auth', AuthRoutes);
 // Configurar rutas API
 router.use('/prueba', PruebaRoutes);
 router.use('/test', TestRoutes);
+router.use('/prueba-test', pruebaTestRoutes);
 
 // Configurar rutas CMS
 router.use('/publication', PublicationRoutes);

@@ -6,7 +6,8 @@ import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
 import { MongoQueryBuilder } from '@core/base/queryBuilder/MongoQueryBuilder';
 import { ILoggerService } from '@core/services/LoggerService';
 
-import { Container } from '@core/Container';
+// import { Container } from '@core/Container';
+import { RequestContext } from '@core/RequestContext';
 
 /**
  * Clase base abstracta para repositorios MongoDB
@@ -16,11 +17,15 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
   protected model: Model<T>;
   protected permanentFilters: FilterQuery<T> = {};
   protected logger: ILoggerService;
+  protected context: RequestContext;
 
-  constructor(model: Model<T>) {
+  constructor(model: Model<T>, context: RequestContext, logger: ILoggerService) {
+    this.context = context;
+    console.log('Request Context son:', this.context); // Ejemplo de uso del contexto
+
     this.model = model;
     // Resolver el logger en el constructor, no a nivel de módulo
-    this.logger = Container.resolve<ILoggerService>('loggerService');
+    this.logger = logger;
   }
 
   /**
@@ -74,7 +79,8 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
 
       query = query.sort(sortObject);
     }
-
+    this.context.push({ un: 'objeto' });
+    console.log('el contexto dentro del repositorio es:', this.context);  
     return query.exec();
   }
 
@@ -82,6 +88,9 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
    * Encuentra un documento por su ID
    */
   async findById(_id: string): Promise<T | null> {
+        this.context.push({ model: this.model.modelName, id: _id });
+    console.log('el contexto dentro del repositorio es:', this.context);  
+  
     return this.model.findById(_id).exec();
   }
 

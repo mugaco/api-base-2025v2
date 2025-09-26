@@ -3,13 +3,15 @@
  */
 import { BaseRepository } from '@core/base/BaseRepository';
 import { IPrueba, PruebaModel } from './PruebaModel';
+import { RequestContext } from '@core/RequestContext';
+import { ILoggerService } from '@core/services/LoggerService';
 
 /**
  * Repositorio para la entidad Prueba heredando de BaseRepository
  */
 export class PruebaRepository extends BaseRepository<IPrueba> {
-  constructor() {
-    super(PruebaModel);
+  constructor(context: RequestContext, loggerService: ILoggerService) {
+    super(PruebaModel, context, loggerService);
     
     // Definir filtros permanentes específicos para esta entidad si es necesario
     // Por ejemplo:

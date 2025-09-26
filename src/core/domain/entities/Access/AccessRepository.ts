@@ -1,13 +1,15 @@
 import { FilterQuery } from 'mongoose';
 import { BaseRepository } from '@core/base/BaseRepository';
 import { IAccess, AccessModel } from './AccessModel';
+import { RequestContext } from '@core/RequestContext';
+import { ILoggerService } from '@core/services/LoggerService';
 
 /**
  * Repositorio para la entidad Access heredando de BaseRepository
  */
 export class AccessRepository extends BaseRepository<IAccess> {
-  constructor() {
-    super(AccessModel);
+  constructor(context: RequestContext, loggerService: ILoggerService) {
+    super(AccessModel, context, loggerService);
 
     // Definir filtros permanentes específicos para esta entidad si es necesario
     // this.permanentFilters = {};

@@ -80,6 +80,8 @@ export function requestContextMiddleware(req: Request, res: Response, next: Next
     
     // Obtener usuario actual si existe
     const currentUser = useCurrentUser(req);
+    const pepe = req.scope?.resolve('context');
+    console.log('el contexto es:', pepe);
 
     // Registrar información de la transacción completada usando datos del contexto
     loggerService.info(`Transacción completada: ${req.method} ${req.path}`, {

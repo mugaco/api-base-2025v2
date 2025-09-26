@@ -15,6 +15,10 @@ import { TestRepository } from '@api/domain/entities/Test/TestRepository';
 import { TestService } from '@api/domain/entities/Test/TestService';
 import { TestController } from '@api/domain/entities/Test/TestController';
 
+// Importar orquestadores
+import { PruebaTestService } from '@api/domain/orchestrators/PruebaTestService';
+import { PruebaTestController } from '@api/domain/orchestrators/PruebaTestController';
+
 /**
  * Registra todas las dependencias relacionadas con entidades del dominio
  * Organizado por entidad para facilitar mantenimiento
@@ -24,9 +28,9 @@ export function registerEntitiesDependencies(_container: AwilixContainer): void 
   // ========================================
   // Entidad: Prueba
   // ========================================
-  Container.register('pruebaRepository').asClass(PruebaRepository).singleton();
-  Container.register('pruebaService').asClass(PruebaService).singleton();
-  Container.register('pruebaController').asClass(PruebaController).singleton();
+  Container.register('pruebaRepository').asClass(PruebaRepository).scoped();
+  Container.register('pruebaService').asClass(PruebaService).scoped();
+  Container.register('pruebaController').asClass(PruebaController).scoped();
 
   // ========================================
   // Entidad: Test
@@ -34,6 +38,12 @@ export function registerEntitiesDependencies(_container: AwilixContainer): void 
   Container.register('testRepository').asClass(TestRepository).scoped();
   Container.register('testService').asClass(TestService).scoped();
   Container.register('testController').asClass(TestController).scoped();
+
+  // ========================================
+  // Orquestadores
+  // ========================================
+  Container.register('pruebaTestService').asClass(PruebaTestService).scoped();
+  Container.register('pruebaTestController').asClass(PruebaTestController).scoped();
 
   // ========================================
   // Entidad: User (ejemplo para futura implementación)
