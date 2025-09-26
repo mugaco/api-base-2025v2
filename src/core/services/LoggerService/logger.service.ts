@@ -1,4 +1,5 @@
 import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
 import { ILoggerService } from './logger.interface';
 
 export class LoggerService implements ILoggerService {
@@ -14,8 +15,8 @@ export class LoggerService implements ILoggerService {
         winston.format.errors({ stack: true }),
         winston.format.json()
       ),
-      defaultMeta: { 
-        service: 'api-base-2025',
+      defaultMeta: {
+        service: process.env.API_TITLE || 'api-base-2025',
         env: process.env.NODE_ENV || 'development'
       },
       transports: [
@@ -34,15 +35,33 @@ export class LoggerService implements ILoggerService {
 
     // Aquí van las operaciones asíncronas
     // Por ejemplo: crear directorios, verificar permisos, etc.
-    
-    // Agregar transports a archivo después de la inicialización
-    this.logger.add(new winston.transports.File({ 
-      filename: 'logs/combined.log'
+
+    // Agregar transports de rotación diaria después de la inicialización
+    this.logger.add(new DailyRotateFile({
+      filename: 'logs/combined-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '200m',
+      auditFile: 'logs/.audit-combined.json',
+      // maxFiles: '30d', // ← ELIMINADO - No borra archivos automáticamente
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      )
     }));
-    
-    this.logger.add(new winston.transports.File({ 
-      filename: 'logs/error.log', 
-      level: 'error' 
+
+    this.logger.add(new DailyRotateFile({
+      filename: 'logs/error-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '50m',
+      auditFile: 'logs/.audit-error.json',
+      // maxFiles: '90d', // ← ELIMINADO - No borra errores automáticamente
+      level: 'error',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      )
     }));
 
     this.initialized = true;
