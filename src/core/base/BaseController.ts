@@ -7,25 +7,12 @@ import { IController } from '@core/base/interfaces/controller.interface';
 import { IService, FilterQuery } from '@core/base/interfaces/service.interface';
 
 /**
- * Extensión de IService para incluir métodos específicos del BaseController
- */
-interface ICrudService<T = unknown, CreateDTO = unknown, UpdateDTO = unknown> extends IService<T, CreateDTO, UpdateDTO> {
-  // Método adicional para filtros avanzados (opcional)
-  getPaginatedWithFilters?(
-    filter: FilterQuery,
-    paginationParams: IPaginationParams,
-    options?: IQueryOptions,
-    advancedFilters?: string
-  ): Promise<IPaginatedResponse<T>>;
-
-  // restore ya está en IService como opcional
-}
-
-/**
  * Clase base abstracta para controladores
  * Proporciona operaciones comunes utilizando herencia
  */
-export abstract class BaseController<TService extends ICrudService = ICrudService> implements IController {
+export abstract class BaseController<
+  TService extends IService<unknown, unknown, unknown> = IService<unknown, unknown, unknown>
+> implements IController {
   protected service: TService;
 
   constructor(service: TService) {
@@ -285,14 +272,13 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
         const paginationParams = this.extractPaginationParams(req);
         const options = this.extractQueryOptions(req);
         
-        const result = filtersInfo.filters && this.service.getPaginatedWithFilters
-          ? await this.service.getPaginatedWithFilters(
-              finalQuery,
-              paginationParams,
-              options,
-              filtersInfo.filters
-            )
-          : await this.service.getPaginated(finalQuery, paginationParams, options);
+        // Usar el método getPaginated unificado que maneja ambos casos
+        const result = await this.service.getPaginated(
+          finalQuery,
+          paginationParams,
+          options,
+          filtersInfo.filters // Se pasa como parámetro opcional
+        );
         
         this.sendSuccessResponse(res, result);
       } else {
@@ -305,14 +291,13 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
         };
         const options = this.extractQueryOptions(req);
         
-        const result = filtersInfo.filters && this.service.getPaginatedWithFilters
-          ? await this.service.getPaginatedWithFilters(
-              finalQuery,
-              safetyPaginationParams,
-              options,
-              filtersInfo.filters
-            )
-          : await this.service.getPaginated(finalQuery, safetyPaginationParams, options);
+        // Usar el método getPaginated unificado que maneja ambos casos
+        const result = await this.service.getPaginated(
+          finalQuery,
+          safetyPaginationParams,
+          options,
+          filtersInfo.filters // Se pasa como parámetro opcional
+        );
         
         // Respuesta con datos y mensaje informativo sobre el límite aplicado
         if (this.isPaginatedResponse(result)) {
@@ -361,6 +346,13 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
 
   // Métodos CRUD estándar que pueden ser sobrescritos por las clases hijas
 
+  /**
+   * ⚠️ ADVERTENCIA: Este método NO aplica límites de registros.
+   * Úsalo solo cuando sepas que la colección es un diccionario tipo opciones
+   * con un número de registros contenido (ej: configuraciones, catálogos pequeños).
+   *
+   * ✅ RECOMENDADO: Usar el método get() que incluye límites de seguridad automáticos.
+   */
   getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Solo usar filtros avanzados - no buildQuery
@@ -373,9 +365,14 @@ export abstract class BaseController<TService extends ICrudService = ICrudServic
   };
 
   /**
-   * Método unificado que maneja tanto las solicitudes getAll como getPaginated
-   * basado en la presencia del parámetro 'page'
-   * Procesa filtros avanzados y búsqueda simple
+   * Método unificado que maneja todas las consultas GET
+   * - Sin 'page': devuelve todos con límite de seguridad (max 100)
+   * - Con 'page': aplica paginación completa
+   * - Soporta simpleSearch y filters automáticamente
+   * - Aplica isDeleted: false en todos los casos
+   *
+   * ✅ RECOMENDADO: Usar este método para todas las consultas GET normales.
+   * Incluye protección automática contra colecciones grandes.
    */
   get = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

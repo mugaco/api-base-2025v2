@@ -26,8 +26,12 @@ export class AccessService extends BaseService<IAccess, IAccessBase, ICreateAcce
   /**
    * Sobrescribe getAll para aplicar transformación
    */
-  async getAll(query?: FilterQuery): Promise<IAccessBase[]> {
-    const accesses = await super.getAll(query);
+  async getAll(
+    query?: FilterQuery,
+    options?: IQueryOptions,
+    advancedFilters?: string
+  ): Promise<IAccessBase[]> {
+    const accesses = await super.getAll(query, options, advancedFilters);
     return accesses.map(access => accessToResponse(access as unknown as IAccess));
   }
 
@@ -75,33 +79,18 @@ export class AccessService extends BaseService<IAccess, IAccessBase, ICreateAcce
    * Sobrescribe getPaginated para aplicar transformación
    */
   async getPaginated(
-    query: FilterQuery,
-    paginationParams: IPaginationParams,
-    options?: IQueryOptions
-  ): Promise<IPaginatedResponse<IAccessBase>> {
-    const paginatedResult = await super.getPaginated(query, paginationParams, options);
-    return {
-      ...paginatedResult,
-      data: paginatedResult.data.map((access) => accessToResponse(access as unknown as IAccess))
-    };
-  }
-
-  /**
-   * Sobrescribe getPaginatedWithFilters para aplicar transformación
-   */
-  async getPaginatedWithFilters(
     filter: FilterQuery = {},
     paginationParams: IPaginationParams,
     options?: IQueryOptions,
     advancedFilters?: string
   ): Promise<IPaginatedResponse<IAccessBase>> {
-    const paginatedResult = await super.getPaginatedWithFilters(
+    const paginatedResult = await super.getPaginated(
       filter,
       paginationParams,
       options,
       advancedFilters
     );
-    
+
     return {
       ...paginatedResult,
       data: paginatedResult.data.map((access) => accessToResponse(access as unknown as IAccess))

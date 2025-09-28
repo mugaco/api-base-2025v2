@@ -6,13 +6,10 @@ import { Request, Response, NextFunction } from 'express';
  */
 export interface IController {
   /**
-   * Obtiene todos los recursos
-   */
-  getAll?: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-
-  /**
-   * Método unificado que maneja tanto solicitudes getAll como getPaginated
-   * basado en la presencia del parámetro 'page'
+   * Método unificado que maneja todas las consultas GET
+   * - Sin 'page': devuelve todos con límite de seguridad
+   * - Con 'page': aplica paginación
+   * - Soporta simpleSearch y filters automáticamente
    */
   get: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
@@ -37,18 +34,12 @@ export interface IController {
   delete: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
   /**
-   * Elimina un recurso de forma lógica
+   * Elimina un recurso de forma lógica (opcional)
    */
   softDelete?: (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
   /**
-   * Restaura un recurso eliminado lógicamente
+   * Restaura un recurso eliminado lógicamente (opcional)
    */
   restore?: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-
-  /**
-   * Obtiene recursos de forma paginada
-   */
-  getPaginated?: (req: Request, res: Response, next: NextFunction) => Promise<void>;
-
 }

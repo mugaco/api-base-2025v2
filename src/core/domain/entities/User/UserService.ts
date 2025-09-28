@@ -19,8 +19,12 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
   /**
    * Sobrescribe getAll para aplicar transformación
    */
-  async getAll(query?: FilterQuery): Promise<IUserResponse[]> {
-    const users = await super.getAll(query);
+  async getAll(
+    query?: FilterQuery,
+    options?: IQueryOptions,
+    advancedFilters?: string
+  ): Promise<IUserResponse[]> {
+    const users = await super.getAll(query, options, advancedFilters);
     return users.map(user => userToResponse(user as unknown as IUserModel));
   }
   
@@ -78,33 +82,18 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
    * Sobrescribe getPaginated para aplicar transformación
    */
   async getPaginated(
-    query: FilterQuery,
-    paginationParams: IPaginationParams,
-    options?: IQueryOptions
-  ): Promise<IPaginatedResponse<IUserResponse>> {
-    const paginatedResult = await super.getPaginated(query, paginationParams, options);
-    return {
-      ...paginatedResult,
-      data: paginatedResult.data.map((user) => userToResponse(user as unknown as IUserModel))
-    };
-  }
-
-  /**
-   * Sobrescribe getPaginatedWithFilters para aplicar transformación
-   */
-  async getPaginatedWithFilters(
     filter: FilterQuery = {},
     paginationParams: IPaginationParams,
     options?: IQueryOptions,
     advancedFilters?: string
   ): Promise<IPaginatedResponse<IUserResponse>> {
-    const paginatedResult = await super.getPaginatedWithFilters(
+    const paginatedResult = await super.getPaginated(
       filter,
       paginationParams,
       options,
       advancedFilters
     );
-    
+
     return {
       ...paginatedResult,
       data: paginatedResult.data.map((user) => userToResponse(user as unknown as IUserModel))

@@ -4,7 +4,11 @@ import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.inte
 import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
 
 export interface IRepository<T extends Document> {
-  findAll(filter?: FilterQuery<T>, options?: IQueryOptions): Promise<T[]>;
+  findAll(
+    filter?: FilterQuery<T>,
+    options?: IQueryOptions,
+    advancedFilters?: string
+  ): Promise<T[]>;
   findById(_id: string): Promise<T | null>;
   findOne(filter: FilterQuery<T>): Promise<T | null>;
   create(data: Partial<T>): Promise<T>;
@@ -14,22 +18,10 @@ export interface IRepository<T extends Document> {
   findPaginated(
     filter: FilterQuery<T>,
     paginationParams: IPaginationParams,
-    options?: IQueryOptions
-  ): Promise<IPaginatedResponse<T>>;
-  count(filter?: FilterQuery<T>): Promise<number>;
-  
-  // Nuevos métodos que soportan filtros avanzados (sin permanentFilters)
-  findAllWithFilters(
-    filter?: FilterQuery<T>, 
-    advancedFilters?: string
-  ): Promise<T[]>;
-  
-  findPaginatedWithFilters(
-    filter: FilterQuery<T>,
-    paginationParams: IPaginationParams,
     options?: IQueryOptions,
     advancedFilters?: string
   ): Promise<IPaginatedResponse<T>>;
+  count(filter?: FilterQuery<T>): Promise<number>;
 }
 
 /**

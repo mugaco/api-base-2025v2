@@ -148,14 +148,15 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
   async getPaginated(
     query: Record<string, unknown>,
     paginationParams: IPaginationParams,
-    options?: IQueryOptions
+    options?: IQueryOptions,
+    advancedFilters?: string
   ): Promise<IPaginatedResponse<IPublicationResponse>> {
-    // Asegurar que solo se recuperan elementos no eliminados
-    query = { ...query, isDeleted: false };
+    // Ya no es necesario añadir isDeleted: false aquí porque BaseService lo hace
     const result = await super.getPaginated(
       query,
       paginationParams,
-      options
+      options,
+      advancedFilters
     );
     return {
       ...result,

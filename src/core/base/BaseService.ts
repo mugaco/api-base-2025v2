@@ -24,11 +24,27 @@ export abstract class BaseService<
 
   /**
    * Obtiene todos los elementos que coinciden con el filtro
+   *
+   * ⚠️ ADVERTENCIA: Este método NO aplica límites de registros.
+   * Úsalo solo cuando sepas que la colección es un diccionario tipo opciones
+   * con un número de registros contenido (ej: configuraciones, catálogos pequeños).
+   * Para consultas generales, usa getPaginated() que incluye límites de seguridad.
+   *
+   * @param filter - Filtro base (normalmente de simpleSearch)
+   * @param options - Opciones de consulta (ordenación, proyección)
+   * @param advancedFilters - Filtros avanzados en formato JSON string
    */
-  async getAll(filter?: FilterQuery<TDocument>, options?: IQueryOptions): Promise<TResponse[]> {
+  async getAll(
+    filter?: FilterQuery<TDocument>,
+    options?: IQueryOptions,
+    advancedFilters?: string
+  ): Promise<TResponse[]> {
     // Por defecto, excluir elementos eliminados lógicamente
     const finalFilter = { ...filter, isDeleted: false };
-    const items = await this.repository.findAll(finalFilter, options);
+
+    // Llamar al método unificado findAll con todos los parámetros
+    const items = await this.repository.findAll(finalFilter, options, advancedFilters);
+
     return items as unknown as TResponse[];
   }
 
@@ -45,9 +61,12 @@ export abstract class BaseService<
 
   /**
    * Busca un elemento que coincida con el filtro
+   * Aplica automáticamente el filtro isDeleted: false
    */
   async findOne(filter: FilterQuery<TDocument>): Promise<TResponse | null> {
-    const result = await this.repository.findOne(filter);
+    // Por defecto, excluir elementos eliminados lógicamente
+    const finalFilter = { ...filter, isDeleted: false };
+    const result = await this.repository.findOne(finalFilter);
     return result as unknown as TResponse | null;
   }
 
@@ -105,15 +124,28 @@ export abstract class BaseService<
 
   /**
    * Obtiene elementos de forma paginada
+   * @param filter - Filtro base (normalmente de simpleSearch)
+   * @param paginationParams - Parámetros de paginación
+   * @param options - Opciones de consulta (ordenación, proyección)
+   * @param advancedFilters - Filtros avanzados en formato JSON string
    */
   async getPaginated(
     filter: FilterQuery<TDocument>,
     paginationParams: IPaginationParams,
-    options?: IQueryOptions
+    options?: IQueryOptions,
+    advancedFilters?: string
   ): Promise<IPaginatedResponse<TResponse>> {
     // Por defecto, excluir elementos eliminados lógicamente
     const finalFilter = { ...filter, isDeleted: false };
-    const result = await this.repository.findPaginated(finalFilter, paginationParams, options);
+
+    // Llamar al método unificado findPaginated con todos los parámetros
+    const result = await this.repository.findPaginated(
+      finalFilter,
+      paginationParams,
+      options,
+      advancedFilters
+    );
+
     return {
       ...result,
       data: result.data as unknown as TResponse[]
@@ -122,9 +154,12 @@ export abstract class BaseService<
 
   /**
    * Cuenta elementos que coinciden con el filtro
+   * Aplica automáticamente el filtro isDeleted: false
    */
   async count(filter?: FilterQuery<TDocument>): Promise<number> {
-    return this.repository.count(filter);
+    // Por defecto, excluir elementos eliminados lógicamente
+    const finalFilter = { ...filter, isDeleted: false };
+    return this.repository.count(finalFilter);
   }
 
   /**
@@ -141,40 +176,8 @@ export abstract class BaseService<
     return items as unknown as TResponse[];
   }
 
-  /**
-   * Obtiene todos los elementos con filtros avanzados
-   */
-  async getAllWithFilters(
-    filter: FilterQuery<TDocument> = {},
-    advancedFilters?: string
-  ): Promise<TResponse[]> {
-    const items = await this.repository.findAllWithFilters(
-      filter,
-      advancedFilters
-    );
-    return items as unknown as TResponse[];
-  }
-
-  /**
-   * Obtiene elementos de forma paginada con filtros avanzados
-   */
-  async getPaginatedWithFilters(
-    filter: FilterQuery<TDocument> = {},
-    paginationParams: IPaginationParams,
-    options?: IQueryOptions,
-    advancedFilters?: string
-  ): Promise<IPaginatedResponse<TResponse>> {
-    const paginatedResult = await this.repository.findPaginatedWithFilters(
-      filter,
-      paginationParams,
-      options,
-      advancedFilters
-    );
-    
-    return {
-      ...paginatedResult,
-      data: paginatedResult.data as unknown as TResponse[]
-    };
-  }
+  // Los métodos getAllWithFilters y getPaginatedWithFilters se han unificado
+  // en getAll y getPaginated para evitar duplicidad y garantizar consistencia
+  // en el filtrado de isDeleted
 
 }

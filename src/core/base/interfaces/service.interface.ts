@@ -8,7 +8,7 @@ import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
 export type FilterQuery = Record<string, unknown>;
 
 export interface IService<T, CreateDTO, UpdateDTO> {
-  getAll(query?: FilterQuery, options?: IQueryOptions): Promise<T[]>;
+  getAll(query?: FilterQuery, options?: IQueryOptions, advancedFilters?: string): Promise<T[]>;
   findById(_id: string): Promise<T>;
   findOne(query: FilterQuery): Promise<T | null>;
   create(data: CreateDTO): Promise<T>;
@@ -19,6 +19,7 @@ export interface IService<T, CreateDTO, UpdateDTO> {
   getPaginated(
     query: FilterQuery,
     paginationParams: IPaginationParams,
-    options?: IQueryOptions
+    options?: IQueryOptions,
+    advancedFilters?: string
   ): Promise<IPaginatedResponse<T>>;
 } 

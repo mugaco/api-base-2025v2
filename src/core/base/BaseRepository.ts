@@ -59,9 +59,25 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
 
   /**
    * Encuentra todos los documentos que cumplen con el filtro
+   * @param filter - Filtro base de MongoDB
+   * @param options - Opciones de consulta (proyección, ordenamiento)
+   * @param advancedFilters - Filtros avanzados en formato JSON string
    */
-  async findAll(filter: FilterQuery<T> = {}, options?: IQueryOptions): Promise<T[]> {
-    const combinedFilter = this.applyPermanentFilters(filter);
+  async findAll(
+    filter: FilterQuery<T> = {},
+    options?: IQueryOptions,
+    advancedFilters?: string
+  ): Promise<T[]> {
+    // Procesar filtros avanzados si existen
+    const advancedQuery = advancedFilters
+      ? this.parseAdvancedFilters(advancedFilters)
+      : {};
+
+    // Combinar todos los filtros
+    const combinedFilter = this.applyPermanentFilters({
+      ...filter,
+      ...advancedQuery
+    });
 
     let query: Query<T[], T> = this.model.find(combinedFilter);
 
@@ -274,17 +290,31 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
 
   /**
    * Encuentra documentos de forma paginada
+   * @param filter - Filtro base de MongoDB
+   * @param paginationParams - Parámetros de paginación
+   * @param options - Opciones de consulta (proyección, ordenamiento)
+   * @param advancedFilters - Filtros avanzados en formato JSON string
    */
   async findPaginated(
     filter: FilterQuery<T> = {},
     { page = 1, itemsPerPage = 10 }: IPaginationParams,
-    options?: IQueryOptions
+    options?: IQueryOptions,
+    advancedFilters?: string
   ): Promise<IPaginatedResponse<T>> {
+    // Procesar filtros avanzados si existen
+    const advancedQuery = advancedFilters
+      ? this.parseAdvancedFilters(advancedFilters)
+      : {};
+
+    // Combinar todos los filtros
+    const combinedFilter = this.applyPermanentFilters({
+      ...filter,
+      ...advancedQuery
+    });
+
     // Asegurar que page e itemsPerPage sean números válidos
     const validPage = Math.max(1, page);
     const validItemsPerPage = Math.max(1, itemsPerPage);
-
-    const combinedFilter = this.applyPermanentFilters(filter);
     const skip = (validPage - 1) * validItemsPerPage;
 
     let query: Query<T[], T> = this.model.find(combinedFilter);
@@ -347,51 +377,6 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
     return this.findAll({ ...query, isDeleted: false } as FilterQuery<T>);
   }
 
-  /**
-   * Encuentra todos los elementos usando filtros avanzados
-   */
-  async findAllWithFilters(
-    filter: FilterQuery<T> = {},
-    advancedFilters?: string
-  ): Promise<T[]> {
-    // Procesar filtros avanzados si existen
-    let advancedFiltersQuery = {};
-    if (advancedFilters) {
-      advancedFiltersQuery = this.parseAdvancedFilters(advancedFilters);
-    }
-
-    // Combinar todos los filtros
-    const combinedFilter = {
-      ...this.permanentFilters,
-      ...filter,
-      ...advancedFiltersQuery
-    };
-
-    return this.model.find(combinedFilter).exec();
-  }
-
-  /**
-   * Encuentra elementos de forma paginada usando filtros avanzados
-   */
-  async findPaginatedWithFilters(
-    filter: FilterQuery<T>,
-    paginationParams: IPaginationParams,
-    options?: IQueryOptions,
-    advancedFilters?: string
-  ): Promise<IPaginatedResponse<T>> {
-    // Procesar filtros avanzados si existen
-    let advancedFiltersQuery = {};
-    if (advancedFilters) {
-      advancedFiltersQuery = this.parseAdvancedFilters(advancedFilters);
-    }
-
-    // Combinar filtros con filtros avanzados
-    const filterWithAdvanced = {
-      ...filter,
-      ...advancedFiltersQuery
-    };
-
-    // Usar el método findPaginated existente con los filtros combinados
-    return this.findPaginated(filterWithAdvanced, paginationParams, options);
-  }
+  // Los métodos findAllWithFilters y findPaginatedWithFilters han sido eliminados
+  // Su funcionalidad está ahora integrada en findAll y findPaginated con el parámetro opcional advancedFilters
 }
