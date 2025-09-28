@@ -3,14 +3,16 @@
  */
 import { BaseRepository } from '@core/base/BaseRepository';
 import { {{resourceNameUpper}}Model, I{{resourceNameUpper}} } from './{{resourceNameUpper}}Model';
+import { ActivityLog } from '@core/ActivityLog';
+import { ILoggerService } from '@core/services/LoggerService';
 
 /**
  * Repositorio para la entidad {{resourceNameUpper}}
  * Extiende BaseRepository para heredar operaciones CRUD estándar
  */
 export class {{resourceNameUpper}}Repository extends BaseRepository<I{{resourceNameUpper}}> {
-  constructor() {
-    super({{resourceNameUpper}}Model);
+  constructor(activity: ActivityLog, loggerService: ILoggerService) {
+    super({{resourceNameUpper}}Model, activity, loggerService);
   }
 
   // Métodos adicionales específicos del repositorio pueden añadirse aquí
