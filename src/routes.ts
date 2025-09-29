@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { PruebaRoutes } from '@api/domain/entities/Prueba/PruebaRoutes';
+import { OrderRoutes } from '@api/domain/orchestrators/Order/OrderRoutes';
 
 
 // Core domain routes
@@ -34,6 +35,7 @@ router.use('/auth', AuthRoutes);
 
 // Configurar rutas API
 router.use('/prueba', PruebaRoutes);
+router.use('/orders', OrderRoutes);
 
 
 // Configurar rutas CMS

@@ -10,6 +10,9 @@ import { PruebaRepository } from '@api/domain/entities/Prueba/PruebaRepository';
 import { PruebaService } from '@api/domain/entities/Prueba/PruebaService';
 import { PruebaController } from '@api/domain/entities/Prueba/PruebaController';
 
+// Importar orchestrator - Order
+import { OrderOrchestrator } from '@api/domain/orchestrators/Order/OrderOrchestrator';
+import { OrderController } from '@api/domain/orchestrators/Order/OrderController';
 // Importar orquestadores
 
 
@@ -46,6 +49,13 @@ export function registerEntitiesDependencies(_container: AwilixContainer): void 
   // Container.register('productRepository').asClass(ProductRepository).singleton();
   // Container.register('productService').asClass(ProductService).scoped();
   // Container.register('productController').asClass(ProductController).scoped();
+
+
+  // ========================================
+  // Orchestrator: Order
+  // ========================================
+  Container.register('orderOrchestrator').asClass(OrderOrchestrator).scoped();
+  Container.register('orderController').asClass(OrderController).scoped();
 
   // Agregar más entidades siguiendo el mismo patrón...
 }
