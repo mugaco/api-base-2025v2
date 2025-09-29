@@ -21,8 +21,15 @@ import { {{this}}Service } from '@api/domain/entities/{{this}}/{{this}}Service';
  */
 export class {{resourceNameUpper}}Orchestrator {
   constructor(
+    {{#if imports}}
+    // Servicios inyectados
+    {{#each imports}}
+    private {{toLowerCase this}}Service: {{this}}Service,
+    {{/each}}
+    {{else}}
     // TODO: Inyectar los servicios necesarios aquí
     // Ejemplo: private userService: UserService
+    {{/if}}
   ) {}
 
   /**

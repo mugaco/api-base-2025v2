@@ -277,6 +277,12 @@ export class OrchestratorCommand extends BaseCommand {
       const templatePath = path.join(templatesDir, templateFile);
       const templateContent = await this.fileSystemService.readFile(templatePath);
 
+      // Registrar helper para convertir a minúsculas con primera letra en minúscula
+      Handlebars.registerHelper('toLowerCase', function(str) {
+        if (typeof str !== 'string') return '';
+        return str.charAt(0).toLowerCase() + str.slice(1);
+      });
+
       // Compilar la plantilla
       const template = Handlebars.compile(templateContent, { noEscape: true });
 
@@ -346,7 +352,7 @@ export class OrchestratorCommand extends BaseCommand {
       const routePath = StringUtils.toKebabCase(StringUtils.pluralize(normalizedName));
 
       // Leer el contenido actual
-      const content = await this.fileSystemService.readFile(routesFile);
+      let content = await this.fileSystemService.readFile(routesFile);
 
       // Verificar si la ruta ya está importada
       const importPattern = new RegExp(`import.+${pascalName}Routes`);
@@ -355,35 +361,62 @@ export class OrchestratorCommand extends BaseCommand {
         return;
       }
 
-      // Crear nuevo contenido
-      let newContent = content;
+      // 1. Añadir el import del orchestrator
+      // Buscar la sección de imports de API domain (después de los imports de Prueba o al inicio de API)
+      const apiImportRegex = /import\s+{\s*\w+Routes\s*}\s+from\s+'@api\/domain\/entities\/\w+\/\w+Routes';/;
+      const apiImportMatch = content.match(apiImportRegex);
 
-      // Añadir la importación
-      const lastImportIndex = content.lastIndexOf('import {');
-      if (lastImportIndex !== -1) {
-        const nextLineAfterImport = content.indexOf('\n', lastImportIndex);
-        if (nextLineAfterImport !== -1) {
-          newContent =
-            content.slice(0, nextLineAfterImport + 1) +
-            `import { ${pascalName}Routes } from '@api/domain/orchestrators/${pascalName}/${pascalName}Routes';\n` +
-            content.slice(nextLineAfterImport + 1);
+      if (apiImportMatch) {
+        // Añadir después del último import de @api/domain
+        const lastApiImport = content.lastIndexOf(apiImportMatch[0]);
+        const insertPosition = content.indexOf('\n', lastApiImport) + 1;
+        const importLine = `import { ${pascalName}Routes } from '@api/domain/orchestrators/${pascalName}/${pascalName}Routes';\n`;
+        content = content.slice(0, insertPosition) + importLine + content.slice(insertPosition);
+      } else {
+        // Si no hay imports de API domain, añadir después del AuthRoutes (orchestrator core)
+        const authRoutesImport = content.indexOf("import { AuthRoutes } from '@core/domain/orchestrators/Auth/AuthRoutes';");
+        if (authRoutesImport !== -1) {
+          const insertPosition = content.indexOf('\n', authRoutesImport) + 1;
+          const importLine = `\n// API domain orchestrators\nimport { ${pascalName}Routes } from '@api/domain/orchestrators/${pascalName}/${pascalName}Routes';\n`;
+          content = content.slice(0, insertPosition) + importLine + content.slice(insertPosition);
         }
       }
 
-      // Añadir la ruta al router
-      const routerUsePattern = /router\.use\([^;]+;\n/g;
-      const lastRouterUse = [...content.matchAll(routerUsePattern)].pop();
+      // 2. Añadir el router.use para el orchestrator
+      // Buscar la sección "Configurar rutas API"
+      const apiRoutesSection = content.indexOf('// Configurar rutas API');
+      if (apiRoutesSection !== -1) {
+        // Buscar el último router.use en esa sección
+        const nextSection = content.indexOf('\n\n', apiRoutesSection);
+        const sectionContent = nextSection !== -1
+          ? content.substring(apiRoutesSection, nextSection)
+          : content.substring(apiRoutesSection);
 
-      if (lastRouterUse && lastRouterUse.index !== undefined) {
-        const insertPoint = lastRouterUse.index + lastRouterUse[0].length;
-        newContent =
-          newContent.slice(0, insertPoint) +
-          `router.use('/${routePath}', ${pascalName}Routes);\n` +
-          newContent.slice(insertPoint);
+        const lastRouterUse = sectionContent.lastIndexOf('router.use(');
+        if (lastRouterUse !== -1) {
+          // Encontrar el final de esa línea
+          const absolutePosition = apiRoutesSection + lastRouterUse;
+          const endOfLine = content.indexOf('\n', absolutePosition);
+          const insertPosition = endOfLine + 1;
+          const routeLine = `router.use('/${routePath}', ${pascalName}Routes);\n`;
+          content = content.slice(0, insertPosition) + routeLine + content.slice(insertPosition);
+        } else {
+          // Si no hay router.use en esa sección, añadirlo después del comentario
+          const afterComment = content.indexOf('\n', apiRoutesSection) + 1;
+          const routeLine = `router.use('/${routePath}', ${pascalName}Routes);\n`;
+          content = content.slice(0, afterComment) + routeLine + content.slice(afterComment);
+        }
+      } else {
+        // Si no existe la sección, crearla antes del export
+        const exportLine = content.indexOf('export const apiRoutes');
+        if (exportLine !== -1) {
+          const insertion = `\n// Configurar rutas API orchestrators\nrouter.use('/${routePath}', ${pascalName}Routes);\n\n`;
+          content = content.slice(0, exportLine) + insertion + content.slice(exportLine);
+        }
       }
 
       // Escribir el nuevo contenido
-      await this.fileSystemService.writeFile(routesFile, newContent);
+      await this.fileSystemService.writeFile(routesFile, content);
 
       this.consoleService.info(`Rutas API actualizadas: '/${routePath}' añadida a ${routesFile}`);
     } catch (error) {
