@@ -26,6 +26,8 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
     this.model = model;
     // Resolver el logger en el constructor, no a nivel de módulo
     this.logger = logger;
+    // Configurar filtro permanente para excluir elementos eliminados lógicamente
+    this.permanentFilters = { isDeleted: false } as FilterQuery<T>;
   }
 
   /**
@@ -370,12 +372,8 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
     return this.model.countDocuments(combinedFilter).exec();
   }
 
-  /**
-   * Obtiene todos los elementos que no han sido eliminados lógicamente
-   */
-  async getAllActive(query: FilterQuery<T> = {}): Promise<T[]> {
-    return this.findAll({ ...query, isDeleted: false } as FilterQuery<T>);
-  }
+  // Método getAllActive eliminado - su funcionalidad ya está cubierta por findAll
+  // que aplica automáticamente el filtro permanente isDeleted: false
 
   // Los métodos findAllWithFilters y findPaginatedWithFilters han sido eliminados
   // Su funcionalidad está ahora integrada en findAll y findPaginated con el parámetro opcional advancedFilters

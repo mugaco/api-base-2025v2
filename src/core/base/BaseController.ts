@@ -5,6 +5,7 @@ import { IGetQueryParams } from '@core/base/interfaces/GetQueryParams.interface'
 import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
 import { IController } from '@core/base/interfaces/controller.interface';
 import { IService, FilterQuery } from '@core/base/interfaces/service.interface';
+import { PAGINATION_LIMITS } from '@core/base/constants';
 
 /**
  * Clase base abstracta para controladores
@@ -98,15 +99,14 @@ export abstract class BaseController<
       page = !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : 1;
     }
     
-    // Valor por defecto: 10 registros por página
-    const DEFAULT_ITEMS_PER_PAGE = 10;
-    // Límite máximo: 100 registros por página por seguridad
-    const MAX_ITEMS_PER_PAGE = 100;
-    
-    let itemsPerPage = DEFAULT_ITEMS_PER_PAGE;
+    // Usar constantes centralizadas
+    const DEFAULT_ITEMS_PER_PAGE = PAGINATION_LIMITS.DEFAULT;
+    const MAX_ITEMS_PER_PAGE = PAGINATION_LIMITS.MAX;
+
+    let itemsPerPage: number = DEFAULT_ITEMS_PER_PAGE;
     if (itemsPerPageStr !== undefined) {
       const parsedItemsPerPage = parseInt(itemsPerPageStr, 10);
-      
+
       // Si el valor no es un número o es menor que 1, usar el valor por defecto
       if (isNaN(parsedItemsPerPage) || parsedItemsPerPage < 1) {
         itemsPerPage = DEFAULT_ITEMS_PER_PAGE;
@@ -183,12 +183,12 @@ export abstract class BaseController<
         }
       }
     }
-    
+
     // Procesar parámetros de proyección de campos si existen
     if (query.fields) {
       options.projection = query.fields as string;
     }
-    
+
     return options;
   }
 
@@ -212,15 +212,15 @@ export abstract class BaseController<
       if (!req.query.simpleSearch) {
         return null;
       }
-      
+
       // Intentar parsear el JSON
       const simpleSearch = JSON.parse(req.query.simpleSearch as string);
-      
+
       // Validar estructura básica
       if (!simpleSearch.search || !simpleSearch.fields || !Array.isArray(simpleSearch.fields) || simpleSearch.fields.length === 0) {
         throw new Error('Formato inválido para simpleSearch. El formato correcto es: {"search":"término","fields":["campo1","campo2"]}');
       }
-      
+
       // Construir condiciones de búsqueda
       return {
         $or: simpleSearch.fields.map((field: string) => ({
@@ -283,8 +283,8 @@ export abstract class BaseController<
         this.sendSuccessResponse(res, result);
       } else {
         // Comportamiento de getAll pero con un límite de seguridad
-        // Aplicar paginación con límite máximo por defecto (100 registros)
-        const MAX_ITEMS = 100;
+        // Aplicar paginación con límite máximo por defecto
+        const MAX_ITEMS = PAGINATION_LIMITS.SAFETY;
         const safetyPaginationParams = {
           page: 1,
           itemsPerPage: MAX_ITEMS
@@ -346,33 +346,16 @@ export abstract class BaseController<
 
   // Métodos CRUD estándar que pueden ser sobrescritos por las clases hijas
 
-  /**
-   * ⚠️ ADVERTENCIA: Este método NO aplica límites de registros.
-   * Úsalo solo cuando sepas que la colección es un diccionario tipo opciones
-   * con un número de registros contenido (ej: configuraciones, catálogos pequeños).
-   *
-   * ✅ RECOMENDADO: Usar el método get() que incluye límites de seguridad automáticos.
-   */
-  getAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      // Solo usar filtros avanzados - no buildQuery
-      const items = await this.service.getAll({});
-
-      this.sendSuccessResponse(res, items);
-    } catch (error) {
-      next(error);
-    }
-  };
+  // Método getAll eliminado por seguridad - usar get() que incluye límites automáticos
 
   /**
-   * Método unificado que maneja todas las consultas GET
-   * - Sin 'page': devuelve todos con límite de seguridad (max 100)
+   * Obtiene elementos con límites de seguridad automáticos
+   * - Sin 'page': devuelve máximo 100 registros con aviso
    * - Con 'page': aplica paginación completa
    * - Soporta simpleSearch y filters automáticamente
-   * - Aplica isDeleted: false en todos los casos
+   * - El Repository aplica isDeleted: false automáticamente
    *
-   * ✅ RECOMENDADO: Usar este método para todas las consultas GET normales.
-   * Incluye protección automática contra colecciones grandes.
+   * Este es el método principal para todas las consultas GET.
    */
   get = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

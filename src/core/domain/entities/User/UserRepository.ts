@@ -11,8 +11,10 @@ export class UserRepository extends BaseRepository<IUserModel> {
   constructor(activity: ActivityLog, loggerService: ILoggerService) {
     super(UserModel, activity, loggerService);
 
-    // Definir filtros permanentes específicos para esta entidad
+    // Agregar filtros permanentes específicos para esta entidad
+    // Importante: mantener los filtros del BaseRepository (isDeleted: false)
     this.permanentFilters = {
+      ...this.permanentFilters,
       isActive: true
     };
   }

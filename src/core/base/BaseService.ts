@@ -4,6 +4,7 @@ import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interf
 import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
 import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
 import { IService } from '@core/base/interfaces/service.interface';
+import { useNotFoundError } from '@core/hooks/useError';
 
 /**
  * Clase base abstracta para servicios
@@ -39,11 +40,8 @@ export abstract class BaseService<
     options?: IQueryOptions,
     advancedFilters?: string
   ): Promise<TResponse[]> {
-    // Por defecto, excluir elementos eliminados lógicamente
-    const finalFilter = { ...filter, isDeleted: false };
-
-    // Llamar al método unificado findAll con todos los parámetros
-    const items = await this.repository.findAll(finalFilter, options, advancedFilters);
+    // El Repository ya aplica el filtro isDeleted automáticamente
+    const items = await this.repository.findAll(filter || {}, options, advancedFilters);
 
     return items as unknown as TResponse[];
   }
@@ -54,7 +52,7 @@ export abstract class BaseService<
   async findById(_id: string): Promise<TResponse> {
     const result = await this.repository.findById(_id);
     if (!result) {
-      throw new Error(`Resource with _id ${_id} not found`);
+      throw useNotFoundError(`Resource with _id ${_id} not found`);
     }
     return result as unknown as TResponse;
   }
@@ -64,9 +62,8 @@ export abstract class BaseService<
    * Aplica automáticamente el filtro isDeleted: false
    */
   async findOne(filter: FilterQuery<TDocument>): Promise<TResponse | null> {
-    // Por defecto, excluir elementos eliminados lógicamente
-    const finalFilter = { ...filter, isDeleted: false };
-    const result = await this.repository.findOne(finalFilter);
+    // El Repository ya aplica el filtro isDeleted automáticamente
+    const result = await this.repository.findOne(filter);
     return result as unknown as TResponse | null;
   }
 
@@ -84,7 +81,7 @@ export abstract class BaseService<
   async update(_id: string, data: TUpdateDTO): Promise<TResponse> {
     const result = await this.repository.update(_id, data as unknown as Partial<TDocument>);
     if (!result) {
-      throw new Error(`Resource with _id ${_id} not found`);
+      throw useNotFoundError(`Resource with _id ${_id} not found`);
     }
     return result as unknown as TResponse;
   }
@@ -102,7 +99,7 @@ export abstract class BaseService<
   async softDelete(_id: string): Promise<TResponse> {
     const result = await this.repository.softDelete(_id);
     if (!result) {
-      throw new Error(`Resource with _id ${_id} not found`);
+      throw useNotFoundError(`Resource with _id ${_id} not found`);
     }
     return result as unknown as TResponse;
   }
@@ -117,7 +114,7 @@ export abstract class BaseService<
     }
     const result = await this.repository.restore(_id);
     if (!result) {
-      throw new Error(`Resource with _id ${_id} not found or could not be restored`);
+      throw useNotFoundError(`Resource with _id ${_id} not found or could not be restored`);
     }
     return result as unknown as TResponse;
   }
@@ -135,12 +132,9 @@ export abstract class BaseService<
     options?: IQueryOptions,
     advancedFilters?: string
   ): Promise<IPaginatedResponse<TResponse>> {
-    // Por defecto, excluir elementos eliminados lógicamente
-    const finalFilter = { ...filter, isDeleted: false };
-
-    // Llamar al método unificado findPaginated con todos los parámetros
+    // El Repository ya aplica el filtro isDeleted automáticamente
     const result = await this.repository.findPaginated(
-      finalFilter,
+      filter,
       paginationParams,
       options,
       advancedFilters
@@ -157,24 +151,12 @@ export abstract class BaseService<
    * Aplica automáticamente el filtro isDeleted: false
    */
   async count(filter?: FilterQuery<TDocument>): Promise<number> {
-    // Por defecto, excluir elementos eliminados lógicamente
-    const finalFilter = { ...filter, isDeleted: false };
-    return this.repository.count(finalFilter);
+    // El Repository ya aplica el filtro isDeleted automáticamente
+    return this.repository.count(filter || {});
   }
 
-  /**
-   * Obtiene todos los elementos activos (no eliminados lógicamente)
-   * Nota: Este método requiere que el repositorio tenga implementado el método getAllActive
-   */
-  async getAllActive(query: FilterQuery<TDocument> = {}): Promise<TResponse[]> {
-    if (!this.repository.getAllActive) {
-      // Si no existe el método, usar findAll con filtro isDeleted: false
-      const items = await this.repository.findAll({ ...query, isDeleted: false } as FilterQuery<TDocument>);
-      return items as unknown as TResponse[];
-    }
-    const items = await this.repository.getAllActive(query);
-    return items as unknown as TResponse[];
-  }
+  // Método getAllActive eliminado - findAll ya aplica automáticamente isDeleted: false
+  // a través de los permanentFilters del Repository
 
   // Los métodos getAllWithFilters y getPaginatedWithFilters se han unificado
   // en getAll y getPaginated para evitar duplicidad y garantizar consistencia
