@@ -1,7 +1,7 @@
-// Esta versión asume que en la base de datos
-// las referencias externas se guardan como ObjectId y no como simples strings.
-// Esto se debe a que el código convierte automáticamente cualquier campo que termina en '_id'
-// a un ObjectId si el valor es un ObjectId válido.
+// Esta versión asume que en la base de datos las referencias externas se guardan como ObjectId.
+// Los campos que terminan en '_id' se convierten automáticamente a ObjectId si el valor es válido.
+// Para evitar la conversión, añade un asterisco al final del nombre del campo: 'external_id*'
+// Esto es útil cuando tienes IDs externos que son strings y no ObjectIds.
 import { ObjectId } from 'mongodb';
 
 /* eslint-disable */
@@ -14,18 +14,43 @@ export class MongoQueryBuilder {
 
     private parseQuery(query: any): any {
         const parsedQuery: any = {};
+
         for (const key in query) {
-            if (key === '$and' || key === '$or' || key === '$not') {
+            if (key === '$and' || key === '$or') {
                 parsedQuery[key] = query[key].map((condition: any) => this.parseQuery(condition));
+            } else if (key === '$not') {
+                // MongoDB no soporta $not a nivel raíz de query
+                throw new Error('$not operator is not supported at query root level. Use it within field operators instead.');
             } else {
                 const field = key;
                 const operators = query[key];
+
                 for (const operator in operators) {
-                    // CAMBIO: Pasamos un booleano que indica si el campo termina en '_id'
-                    parsedQuery[field] = this.parseOperator(operator, operators[operator], field.endsWith('_id'));
+                    // Verificar si el campo debe convertirse a ObjectId
+                    // El escape con * al final indica que NO se debe convertir
+                    const hasEscape = field.endsWith('*');
+                    const fieldName = hasEscape ? field.slice(0, -1) : field;
+                    const shouldConvertToObjectId = fieldName.endsWith('_id') && !hasEscape;
+
+                    const result = this.parseOperator(
+                        operator,
+                        operators[operator],
+                        shouldConvertToObjectId
+                    );
+
+                    // Manejar múltiples operadores correctamente
+                    if (typeof result === 'object' && result !== null && !Array.isArray(result)) {
+                        if (!parsedQuery[fieldName]) {
+                            parsedQuery[fieldName] = {};
+                        }
+                        Object.assign(parsedQuery[fieldName], result);
+                    } else {
+                        parsedQuery[fieldName] = result;
+                    }
                 }
             }
         }
+
         return parsedQuery;
     }
 
@@ -39,19 +64,45 @@ export class MongoQueryBuilder {
             case 'not like':
                 return { $not: { $regex: `.*${convertedValue}.*`, $options: 'i' } };
             case 'in':
-                // CAMBIO: Manejamos la conversión a ObjectId para arrays
                 if (isIdField) {
-                    return { $in: Array.isArray(value) ? value.map(v => this.isValidObjectId(v) ? new ObjectId(v) : v) : [convertedValue] };
+                    return {
+                        $in: Array.isArray(value)
+                            ? value.map(v => this.isValidObjectId(v) ? new ObjectId(v) : v)
+                            : [convertedValue]
+                    };
                 }
-                return { $in: convertedValue };
+                // Asegurar que siempre sea un array
+                return { $in: Array.isArray(value) ? value : [value] };
             case 'not in':
-                // CAMBIO: Similar al caso 'in'
                 if (isIdField) {
-                    return { $nin: Array.isArray(value) ? value.map(v => this.isValidObjectId(v) ? new ObjectId(v) : v) : [convertedValue] };
+                    return {
+                        $nin: Array.isArray(value)
+                            ? value.map(v => this.isValidObjectId(v) ? new ObjectId(v) : v)
+                            : [convertedValue]
+                    };
                 }
-                return { $nin: convertedValue };
+                // Asegurar que siempre sea un array
+                return { $nin: Array.isArray(value) ? value : [value] };
             case 'between':
-                return { $gte: convertedValue[0], $lte: convertedValue[1] };
+                if (!Array.isArray(value)) {
+                    throw new Error(`'between' operator requires an array with exactly 2 values`);
+                }
+                if (value.length !== 2) {
+                    throw new Error(`'between' operator requires exactly 2 values, got ${value.length}`);
+                }
+                // Convertir valores si es campo ID
+                const [min, max] = isIdField && Array.isArray(value)
+                    ? value.map(v => this.isValidObjectId(v) ? new ObjectId(v) : v)
+                    : value;
+
+                // Validar orden solo para valores no-ObjectId (números, fechas, strings)
+                if (!isIdField && typeof min !== 'object' && typeof max !== 'object') {
+                    if (min > max) {
+                        throw new Error(`'between' operator: first value (${min}) must be less than or equal to second value (${max})`);
+                    }
+                }
+
+                return { $gte: min, $lte: max };
             case '=':
             case '$eq':  // CAMBIO: Añadimos soporte para $eq
                 return convertedValue;
