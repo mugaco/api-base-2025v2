@@ -4,6 +4,7 @@
  */
 import { Router, Request, Response, NextFunction } from 'express';
 import { OrderController } from './OrderController';
+import { authenticate } from '@core/middleware/authMiddleware';
 // TODO: Importar middleware de validación si es necesario
 // import validateZodSchema from '@core/middleware/validateZodSchema';
 // TODO: Importar esquemas de validación Zod si los hay
@@ -12,6 +13,7 @@ import { OrderController } from './OrderController';
 // Crear el router
 const router = Router();
 
+router.use(authenticate);
 /**
  * Resolver el controller desde el scope del request
  * Esto permite que cada request tenga su propia instancia de servicios scoped

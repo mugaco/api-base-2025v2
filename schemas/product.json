@@ -1,0 +1,34 @@
+{
+  "name": "product",
+  "description": "Products",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string",
+      "required": true,
+      "description": "Name",
+      "meta": {
+        "unique": true
+      }
+    },
+    {
+      "name": "active",
+      "type": "boolean",
+      "required": true,
+      "description": "Active",
+      "default": true
+    },
+    {
+      "name": "price",
+      "type": "number",
+      "required": true,
+      "description": "Price"
+    }
+  ],
+  "audit": true,
+  "softDelete": true,
+  "api": {
+    "path": "products",
+    "auth": true
+  }
+}

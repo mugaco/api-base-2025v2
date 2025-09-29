@@ -1,4 +1,4 @@
-import { Document, Model, FilterQuery, UpdateQuery, Query } from 'mongoose';
+import { Document, Model, FilterQuery, UpdateQuery, Query, ClientSession } from 'mongoose';
 import { IExtendedRepository } from '@core/base/interfaces/repository.interface';
 import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interface';
 import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
@@ -120,14 +120,15 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
   /**
    * Crea un nuevo documento
    */
-  async create(data: Partial<T>): Promise<T> {
+  async create(data: Partial<T>, options?: { session?: ClientSession }): Promise<T> {
     const activityData = {
       activity: 'create',
       resource: this.model.modelName,
       data
     };
     this.activity.push(activityData);
-    return this.model.create(data);
+    const result = await this.model.create([data], options || {});
+    return result[0];
   }
 
   /**
@@ -174,7 +175,7 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
    * Actualiza un documento por su ID
    * Registra los cambios en el ActivityLog
    */
-  async update(_id: string, data: UpdateQuery<T>): Promise<T | null> {
+  async update(_id: string, data: UpdateQuery<T>, options?: { session?: ClientSession }): Promise<T | null> {
     // Obtener el documento antes de actualizar
     const oldDocument = await this.model.findById(_id).exec();
 
@@ -183,7 +184,7 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
     }
 
     // Realizar la actualización
-    const newDocument = await this._update(_id, data);
+    const newDocument = await this._update(_id, data, options);
 
     if (!newDocument) {
       return null;
@@ -211,17 +212,17 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
    * Método interno para actualización sin tracking
    * Usado por softDelete y restore para evitar duplicación de logs
    */
-  async _update(_id: string, data: UpdateQuery<T>): Promise<T | null> {
+  async _update(_id: string, data: UpdateQuery<T>, options?: { session?: ClientSession }): Promise<T | null> {
     return this.model.findOneAndUpdate(
       { _id: _id },
       data,
-      { new: true }
+      { new: true, ...options }
     ).exec();
   }
   /**
    * Elimina un documento permanentemente
    */
-  async delete(_id: string): Promise<boolean> {
+  async delete(_id: string, options?: { session?: ClientSession }): Promise<boolean> {
     const deleted = await this.model.findById(_id).exec();
     if (!deleted) {
       throw useNotFoundError(`Resource with _id ${_id} not found`);
@@ -234,14 +235,14 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
       deletedData: deleted
     };
     this.activity.push(activityData);
-    const result = await this.model.deleteOne({ _id: _id }).exec();
+    const result = await this.model.deleteOne({ _id: _id }, options || {}).exec();
     return result.deletedCount === 1;
   }
 
   /**
    * Elimina un documento de forma lógica
    */
-  async softDelete(_id: string): Promise<T | null> {
+  async softDelete(_id: string, options?: { session?: ClientSession }): Promise<T | null> {
     // Obtener el documento antes de soft delete
     const document = await this.model.findById(_id).exec();
 
@@ -251,7 +252,8 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
 
     const result = await this._update(
       _id,
-      { $set: { isDeleted: true, deletedAt: new Date() } } as UpdateQuery<T>
+      { $set: { isDeleted: true, deletedAt: new Date() } } as UpdateQuery<T>,
+      options
     );
 
     this.activity.push({
@@ -267,7 +269,7 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
   /**
    * Restaura un documento eliminado lógicamente
    */
-  async restore(_id: string): Promise<T | null> {
+  async restore(_id: string, options?: { session?: ClientSession }): Promise<T | null> {
     // Obtener el documento antes de restaurar
     const document = await this.model.findById(_id).exec();
 
@@ -277,7 +279,8 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
 
     const result = await this._update(
       _id,
-      { $set: { isDeleted: false }, $unset: { deletedAt: 1 } } as UpdateQuery<T>
+      { $set: { isDeleted: false }, $unset: { deletedAt: 1 } } as UpdateQuery<T>,
+      options
     );
 
     this.activity.push({

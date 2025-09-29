@@ -1,4 +1,4 @@
-import { Document, FilterQuery, UpdateQuery } from 'mongoose';
+import { Document, FilterQuery, UpdateQuery, ClientSession } from 'mongoose';
 import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interface';
 import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
 import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
@@ -11,10 +11,10 @@ export interface IRepository<T extends Document> {
   ): Promise<T[]>;
   findById(_id: string): Promise<T | null>;
   findOne(filter: FilterQuery<T>): Promise<T | null>;
-  create(data: Partial<T>): Promise<T>;
-  update(_id: string, data: UpdateQuery<T>): Promise<T | null>;
-  delete(_id: string): Promise<boolean>;
-  softDelete(_id: string): Promise<T | null>;
+  create(data: Partial<T>, options?: { session?: ClientSession }): Promise<T>;
+  update(_id: string, data: UpdateQuery<T>, options?: { session?: ClientSession }): Promise<T | null>;
+  delete(_id: string, options?: { session?: ClientSession }): Promise<boolean>;
+  softDelete(_id: string, options?: { session?: ClientSession }): Promise<T | null>;
   findPaginated(
     filter: FilterQuery<T>,
     paginationParams: IPaginationParams,
@@ -28,6 +28,6 @@ export interface IRepository<T extends Document> {
  * Interfaz extendida que incluye métodos opcionales que pueden tener algunos repositorios
  */
 export interface IExtendedRepository<T extends Document> extends IRepository<T> {
-  restore?(id: string): Promise<T | null>;
+  restore?(id: string, options?: { session?: ClientSession }): Promise<T | null>;
   getAllActive?(query: FilterQuery<T>): Promise<T[]>;
 } 

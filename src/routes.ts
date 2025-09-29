@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { PruebaRoutes } from '@api/domain/entities/Prueba/PruebaRoutes';
 import { OrderRoutes } from '@api/domain/orchestrators/Order/OrderRoutes';
+import { ProductRoutes } from '@api/domain/entities/ProductPrueba/ProductRoutes';
 
 
 // Core domain routes
@@ -55,5 +56,10 @@ router.use('/public/media', MediaPublicRoutes);
 router.use('/library', LibraryRoutes);
 router.use('/library-tag', LibraryTagRoutes);
 router.use('/media-tag', MediaTagRoutes);
+router.use('/products', ProductRoutes);
+
+
+
+
 
 export const apiRoutes = router;

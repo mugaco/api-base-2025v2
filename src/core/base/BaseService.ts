@@ -1,4 +1,4 @@
-import { Document, FilterQuery } from 'mongoose';
+import { Document, FilterQuery, ClientSession } from 'mongoose';
 import { IExtendedRepository } from '@core/base/interfaces/repository.interface';
 import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interface';
 import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
@@ -70,16 +70,16 @@ export abstract class BaseService<
   /**
    * Crea un nuevo elemento
    */
-  async create(data: TCreateDTO): Promise<TResponse> {
-    const result = await this.repository.create(data as unknown as Partial<TDocument>);
+  async create(data: TCreateDTO, options?: { session?: ClientSession }): Promise<TResponse> {
+    const result = await this.repository.create(data as unknown as Partial<TDocument>, options);
     return result as unknown as TResponse;
   }
 
   /**
    * Actualiza un elemento existente
    */
-  async update(_id: string, data: TUpdateDTO): Promise<TResponse> {
-    const result = await this.repository.update(_id, data as unknown as Partial<TDocument>);
+  async update(_id: string, data: TUpdateDTO, options?: { session?: ClientSession }): Promise<TResponse> {
+    const result = await this.repository.update(_id, data as unknown as Partial<TDocument>, options);
     if (!result) {
       throw useNotFoundError(`Resource with _id ${_id} not found`);
     }
@@ -89,15 +89,15 @@ export abstract class BaseService<
   /**
    * Elimina un elemento
    */
-  async delete(_id: string): Promise<boolean> {
-    return this.repository.delete(_id);
+  async delete(_id: string, options?: { session?: ClientSession }): Promise<boolean> {
+    return this.repository.delete(_id, options);
   }
 
   /**
    * Realiza un borrado lógico del elemento
    */
-  async softDelete(_id: string): Promise<TResponse> {
-    const result = await this.repository.softDelete(_id);
+  async softDelete(_id: string, options?: { session?: ClientSession }): Promise<TResponse> {
+    const result = await this.repository.softDelete(_id, options);
     if (!result) {
       throw useNotFoundError(`Resource with _id ${_id} not found`);
     }
@@ -108,11 +108,11 @@ export abstract class BaseService<
    * Restaura un elemento eliminado lógicamente
    * Nota: Este método requiere que el repositorio tenga implementado el método restore
    */
-  async restore(_id: string): Promise<TResponse> {
+  async restore(_id: string, options?: { session?: ClientSession }): Promise<TResponse> {
     if (!this.repository.restore) {
       throw new Error('Restore operation is not supported by this repository');
     }
-    const result = await this.repository.restore(_id);
+    const result = await this.repository.restore(_id, options);
     if (!result) {
       throw useNotFoundError(`Resource with _id ${_id} not found or could not be restored`);
     }

@@ -14,7 +14,10 @@ import { PruebaController } from '@api/domain/entities/Prueba/PruebaController';
 import { OrderOrchestrator } from '@api/domain/orchestrators/Order/OrderOrchestrator';
 import { OrderController } from '@api/domain/orchestrators/Order/OrderController';
 // Importar orquestadores
-
+// Importar entidades - Producto
+import { ProductRepository } from '@api/domain/entities/ProductPrueba/ProductRepository';
+import { ProductService } from '@api/domain/entities/ProductPrueba/ProductService';
+import { ProductController } from '@api/domain/entities/ProductPrueba/ProductController';
 
 /**
  * Registra todas las dependencias relacionadas con entidades del dominio
@@ -44,11 +47,11 @@ export function registerEntitiesDependencies(_container: AwilixContainer): void 
   // Container.register('userController').asClass(UserController).scoped();
 
   // ========================================
-  // Entidad: Product (ejemplo para futura implementación)
+  // Entidad: Product PRUEBA 
   // ========================================
-  // Container.register('productRepository').asClass(ProductRepository).singleton();
-  // Container.register('productService').asClass(ProductService).scoped();
-  // Container.register('productController').asClass(ProductController).scoped();
+   Container.register('productRepository').asClass(ProductRepository).singleton();
+   Container.register('productService').asClass(ProductService).scoped();
+   Container.register('productController').asClass(ProductController).scoped();
 
 
   // ========================================
@@ -56,6 +59,10 @@ export function registerEntitiesDependencies(_container: AwilixContainer): void 
   // ========================================
   Container.register('orderOrchestrator').asClass(OrderOrchestrator).scoped();
   Container.register('orderController').asClass(OrderController).scoped();
+
+
+
+
 
   // Agregar más entidades siguiendo el mismo patrón...
 }

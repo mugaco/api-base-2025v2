@@ -24,10 +24,10 @@ export class OrderController {
   executeOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Extraer datos del request
-      // const data = req.body;
+      const data = req.body;
 
       // Llamar al orquestador
-      const result = await this.orderOrchestrator.executeOrderProcess();
+      const result = await this.orderOrchestrator.executeOrderProcess(data);
 
       // Devolver respuesta
       res.status(200).json({

@@ -121,30 +121,54 @@ src/[core|api|packages]/orchestrators/[Capability]/
 
 ## 🔄 Manejo de Transacciones
 
-Cuando una operación involucra múltiples escrituras:
+**REGLA FUNDAMENTAL**: Solo los orquestadores manejan transacciones MongoDB.
+
+### Responsabilidades por Capa:
+
+- **Controllers**: Solo validan y delegan al orquestador
+- **Orquestadores**: Inician, manejan y finalizan transacciones usando `BaseOrchestrator.withTransaction()`
+- **Servicios CRUD**: Reciben session opcional pero nunca inician transacciones
+- **Repositorios**: Ejecutan operaciones con la session recibida
+
+### Implementación con BaseOrchestrator:
 
 ```typescript
-// Controller inicia la transacción
-async processOrder(req: Request, res: Response) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  
-  try {
-    const result = await this.orderOrchestrator.processOrder(
-      orderData,
-      { session }  // Pasa la sesión
-    );
-    
-    await session.commitTransaction();
+// ✅ CORRECTO - Orquestador maneja la transacción
+class OrderOrchestrator extends BaseOrchestrator {
+  async processComplexOrder(data: OrderData): Promise<Order> {
+    return this.withTransaction(async (session) => {
+      // 1. Crear orden
+      const order = await this.orderService.create(data, { session });
+
+      // 2. Actualizar inventario
+      await this.inventoryService.decrementStock(data.items, { session });
+
+      // 3. Procesar pago
+      await this.paymentService.charge(data.payment, { session });
+
+      // 4. Emitir evento tras éxito
+      await this.eventService.emit('ORDER_PROCESSED', { orderId: order.id });
+
+      return order;
+    });
+  }
+}
+
+// ✅ CORRECTO - Controller simplificado
+class OrderController extends BaseController {
+  async processOrder(req: Request, res: Response) {
+    const result = await this.orderOrchestrator.processComplexOrder(req.body);
     res.json(result);
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  } finally {
-    session.endSession();
   }
 }
 ```
+
+### Beneficios de este Patrón:
+
+1. **Consistencia**: Todas las transacciones usan el mismo patrón
+2. **Reutilización**: El método del orquestador funciona desde cualquier contexto (HTTP, CLI, jobs)
+3. **Mantenibilidad**: Lógica de transacciones centralizada en BaseOrchestrator
+4. **Testabilidad**: Fácil mockear transacciones en tests unitarios
 
 ## 🏗️ Patrón de Herencia Base
 
@@ -166,6 +190,12 @@ async processOrder(req: Request, res: Response) {
 - Proporciona operaciones CRUD MongoDB comunes
 - Maneja filtros permanentes, paginación y filtros avanzados
 - Permite definir métodos específicos del repositorio
+- Soporta transacciones a través del parámetro session opcional
+
+### BaseOrchestrator
+- Clase base para orquestadores
+- Proporciona método `withTransaction()` para manejo de transacciones MongoDB
+- Garantiza consistencia en el manejo de transacciones
 
 ## ✅ Checklist de Validación
 
@@ -175,7 +205,7 @@ Antes de crear un nuevo módulo, verificar:
 - [ ] **Orquestadores**: ¿Solo inyecta servicios, no repositorios?
 - [ ] **Dependencias**: ¿No hay referencias circulares?
 - [ ] **Validación**: ¿Zod en controllers, lógica en services?
-- [ ] **Transacciones**: ¿Se manejan correctamente las escrituras múltiples?
+- [ ] **Transacciones**: ¿Los orquestadores usan BaseOrchestrator.withTransaction() para escrituras múltiples?
 - [ ] **Naming**: ¿Los nombres reflejan claramente la responsabilidad?
 - [ ] **Herencia**: ¿Se extienden las clases base apropiadas?
 
@@ -185,9 +215,11 @@ Antes de crear un nuevo módulo, verificar:
 2. **NUNCA** un repositorio debe importar un servicio
 3. **NUNCA** acceder directamente a repositorios desde orquestadores
 4. **NUNCA** emitir eventos desde servicios CRUD (solo desde orquestadores)
-5. **SIEMPRE** usar servicios desde orquestadores
-6. **SIEMPRE** mantener el flujo unidireccional de dependencias
-7. **SIEMPRE** emitir eventos desde orquestadores, no desde servicios
+5. **NUNCA** manejar transacciones desde controllers o servicios CRUD
+6. **SIEMPRE** usar servicios desde orquestadores
+7. **SIEMPRE** usar BaseOrchestrator.withTransaction() para operaciones transaccionales
+8. **SIEMPRE** mantener el flujo unidireccional de dependencias
+9. **SIEMPRE** emitir eventos desde orquestadores, no desde servicios
 
 ## 📝 Ejemplos Prácticos
 
@@ -203,20 +235,25 @@ class OrderService {
   }
 }
 
-// ✅ CORRECTO - Orquestador coordina ambos servicios
-class OrderOrchestrator {
+// ✅ CORRECTO - Orquestador coordina ambos servicios con transacción
+class OrderOrchestrator extends BaseOrchestrator {
   async createOrder(data) {
-    // Validar stock disponible
-    const stockAvailable = await this.inventoryService.checkStock(data.items);
-    if (!stockAvailable) throw new Error('Stock insuficiente');
+    return this.withTransaction(async (session) => {
+      // Validar stock disponible
+      const stockAvailable = await this.inventoryService.checkStock(data.items);
+      if (!stockAvailable) throw new Error('Stock insuficiente');
 
-    // Crear orden
-    const order = await this.orderService.create(data);
+      // Crear orden
+      const order = await this.orderService.create(data, { session });
 
-    // Actualizar inventario
-    await this.inventoryService.decrementStock(data.items);
+      // Actualizar inventario
+      await this.inventoryService.decrementStock(data.items, { session });
 
-    return order;
+      // Emitir evento tras éxito
+      await this.eventService.emit('ORDER_CREATED', { orderId: order.id });
+
+      return order;
+    });
   }
 }
 ```
