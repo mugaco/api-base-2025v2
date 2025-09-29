@@ -1,4 +1,4 @@
-# Reglas Fundamentales de Arquitectura
+# Guía de codificación: Reglas fundamentales de arquitectura
 
 ## 🎯 Principios Core
 
@@ -102,18 +102,20 @@ src/[core|api|packages]/orchestrators/[Capability]/
 2. Solo inyectar el repositorio propio en el constructor
 3. Sobrescribir métodos solo si hay lógica específica de la entidad
 4. No hacer llamadas a otros servicios
+5. **No emitir eventos**: Los servicios CRUD deben mantenerse puros y enfocados en operaciones de datos
 
 ### Para Orquestadores:
 1. Inyectar servicios necesarios en el constructor
 2. Implementar métodos que representen capacidades de negocio
 3. Manejar transacciones cuando involucren múltiples escrituras
 4. Nombrar según la capacidad: `InventoryOrchestrator`, `BillingOrchestrator`
+5. **Emitir eventos**: Los orquestadores son el lugar correcto para emitir eventos
 
 ### Para Repositorios:
 1. Heredar de `BaseRepository<TDocument>`
 2. Solo pasar el modelo en el constructor: `super(EntityModel)`
 3. Definir filtros permanentes en el constructor si es necesario
-4. Exponer métodos específicos que necesiten los orquestadores
+4. Exponer métodos específicos que necesiten los servicios
 5. Ejemplos: `getStock()`, `decrementStock()`, `findByUserId()`
 6. No incluir lógica de negocio, solo acceso a datos
 
@@ -182,8 +184,10 @@ Antes de crear un nuevo módulo, verificar:
 1. **NUNCA** un servicio CRUD debe conocer otro servicio
 2. **NUNCA** un repositorio debe importar un servicio
 3. **NUNCA** acceder directamente a repositorios desde orquestadores
-4. **SIEMPRE** usar servicios desde orquestadores
-5. **SIEMPRE** mantener el flujo unidireccional de dependencias
+4. **NUNCA** emitir eventos desde servicios CRUD (solo desde orquestadores)
+5. **SIEMPRE** usar servicios desde orquestadores
+6. **SIEMPRE** mantener el flujo unidireccional de dependencias
+7. **SIEMPRE** emitir eventos desde orquestadores, no desde servicios
 
 ## 📝 Ejemplos Prácticos
 
@@ -205,14 +209,55 @@ class OrderOrchestrator {
     // Validar stock disponible
     const stockAvailable = await this.inventoryService.checkStock(data.items);
     if (!stockAvailable) throw new Error('Stock insuficiente');
-    
+
     // Crear orden
     const order = await this.orderService.create(data);
-    
+
     // Actualizar inventario
     await this.inventoryService.decrementStock(data.items);
-    
+
     return order;
+  }
+}
+```
+
+### Ejemplo: Emisión de eventos
+
+```typescript
+// ❌ INCORRECTO - Servicio CRUD emitiendo eventos
+class UserService extends BaseService {
+  async create(data: CreateUserDTO) {
+    const user = await super.create(data);
+    this.eventService.emit('USER_CREATED', user); // ❌ Viola principio de responsabilidad única
+    return user;
+  }
+}
+
+// ✅ CORRECTO - Orquestador emite eventos tras coordinar operaciones
+class AuthOrchestrator {
+  constructor(
+    private userService: UserService,
+    private emailService: EmailService,
+    private eventService: IEventService // ✅ Los orquestadores pueden inyectar EventService
+  ) {}
+
+  async registerUser(data: RegisterUserDTO) {
+    // 1. Crear usuario (servicio CRUD puro)
+    const user = await this.userService.create(data);
+
+    // 2. Emitir evento desde el orquestador
+    await this.eventService.emit('USER_REGISTERED', {
+      userId: user.id,
+      email: user.email,
+      timestamp: new Date()
+    });
+
+    // 3. Los listeners pueden manejar tareas asíncronas como:
+    //    - Envío de email de bienvenida
+    //    - Actualización de analytics
+    //    - Notificaciones push
+
+    return user;
   }
 }
 ```

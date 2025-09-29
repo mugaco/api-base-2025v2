@@ -1,0 +1,63 @@
+/**
+ * Orquestador para {{resourceNameUpper}}
+ * Coordina operaciones entre múltiples servicios
+ *
+ * IMPORTANTE: Los orquestadores NO deben inyectar repositorios directamente.
+ * Solo deben coordinar servicios existentes.
+ */
+
+{{#if imports}}
+// Importaciones de servicios necesarios
+{{#each imports}}
+import { {{this}}Service } from '@api/domain/entities/{{this}}/{{this}}Service';
+{{/each}}
+{{/if}}
+
+/**
+ * {{resourceNameUpper}}Orchestrator
+ *
+ * Este orquestador coordina las operaciones relacionadas con {{resourceNameLower}}.
+ * Implementa la lógica de negocio compleja que involucra múltiples entidades.
+ */
+export class {{resourceNameUpper}}Orchestrator {
+  constructor(
+    // TODO: Inyectar los servicios necesarios aquí
+    // Ejemplo: private userService: UserService
+  ) {}
+
+  /**
+   * TODO: Implementar métodos de orquestación
+   *
+   * Ejemplo de método de orquestación:
+   *
+   * async processComplexOperation(data: any) {
+   *   // 1. Validar condiciones de negocio
+   *   // 2. Coordinar operaciones entre servicios
+   *   // 3. Manejar transacciones si es necesario
+   *   // 4. Emitir eventos si corresponde
+   *   // 5. Retornar resultado consolidado
+   * }
+   */
+
+  /**
+   * Método de ejemplo - Reemplazar con lógica real
+   */
+  async execute{{resourceNameUpper}}Process(data: any): Promise<any> {
+    // TODO: Implementar la lógica de orquestación
+    // Este es solo un ejemplo, debe ser reemplazado con la lógica real
+
+    try {
+      // Ejemplo de coordinación entre servicios:
+      // const validation = await this.validationService.validate(data);
+      // const processing = await this.processingService.process(validation);
+      // const result = await this.resultService.save(processing);
+      //
+      // return result;
+
+      throw new Error('{{resourceNameUpper}}Orchestrator.execute{{resourceNameUpper}}Process() no está implementado');
+    } catch (error) {
+      // Manejo de errores y rollback si es necesario
+      throw error;
+    }
+  }
+}

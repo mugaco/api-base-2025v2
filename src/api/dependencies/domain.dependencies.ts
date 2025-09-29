@@ -10,8 +10,6 @@ import { PruebaRepository } from '@api/domain/entities/Prueba/PruebaRepository';
 import { PruebaService } from '@api/domain/entities/Prueba/PruebaService';
 import { PruebaController } from '@api/domain/entities/Prueba/PruebaController';
 
-
-
 // Importar orquestadores
 
 

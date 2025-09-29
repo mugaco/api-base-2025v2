@@ -1,0 +1,49 @@
+/**
+ * Rutas para {{resourceNameUpper}}
+ * Define los endpoints y sus validaciones
+ */
+import { Router, Request, Response, NextFunction } from 'express';
+import { {{resourceNameUpper}}Controller } from './{{resourceNameUpper}}Controller';
+// TODO: Importar middleware de validación si es necesario
+// import validateZodSchema from '@core/middleware/validateZodSchema';
+// TODO: Importar esquemas de validación Zod si los hay
+// import { CreateSchema, UpdateSchema } from './{{resourceNameUpper}}Schema';
+
+// Crear el router
+const router = Router();
+
+/**
+ * Resolver el controller desde el scope del request
+ * Esto permite que cada request tenga su propia instancia de servicios scoped
+ * @throws Error si el scope middleware no está configurado
+ */
+const get{{resourceNameUpper}}Controller = (req: Request): {{resourceNameUpper}}Controller => {
+  if (!req.scope) {
+    throw new Error('Scope middleware not configured. Please add scopeMiddleware to Express app.');
+  }
+  return req.scope.resolve<{{resourceNameUpper}}Controller>('{{resourceNameLower}}Controller');
+};
+
+/**
+ * Definición de rutas para {{resourceNameUpper}}
+ */
+
+// TODO: Definir las rutas necesarias
+// Ejemplo:
+// POST /api/{{resourceNamesKebab}}/process
+router.post(
+  '/process',
+  // TODO: Agregar validación con Zod si es necesario
+  // validateZodSchema(ProcessSchema),
+  (req: Request, res: Response, next: NextFunction) => {
+    const controller = get{{resourceNameUpper}}Controller(req);
+    controller.execute{{resourceNameUpper}}(req, res, next);
+  }
+);
+
+// TODO: Agregar más rutas según sea necesario
+// GET /api/{{resourceNamesKebab}}/status
+// PUT /api/{{resourceNamesKebab}}/update
+// DELETE /api/{{resourceNamesKebab}}/cancel
+
+export const {{resourceNameUpper}}Routes = router;

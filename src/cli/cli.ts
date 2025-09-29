@@ -8,6 +8,7 @@ import { DefaultFileSystemService } from './utils/FileSystemService';
 import { InquirerPromptService } from './utils/PromptService';
 import { SchemaCommand } from './commands/SchemaCommand';
 import { ResourceCommand } from './commands/ResourceCommand';
+import { OrchestratorCommand } from './commands/OrchestratorCommand';
 import { BaseCommand } from './core/BaseCommand';
 import { FileUtils } from './utils/FileUtils';
 import { CLIError } from './core/CLIError';
@@ -54,6 +55,7 @@ function registerCommands(program: Command): void {
   const commands: BaseCommand[] = [
     new SchemaCommand(consoleService, promptService, fileSystemService, schemasDir),
     new ResourceCommand(consoleService, promptService, fileSystemService, schemasDir),
+    new OrchestratorCommand(consoleService, promptService, fileSystemService),
   ];
 
   // Registrar comandos en el programa
@@ -99,6 +101,7 @@ async function runInteractiveMode(): Promise<void> {
     const commandChoices = [
       { name: 'Crear un nuevo esquema de recurso', value: 'schema' },
       { name: 'Generar un recurso desde un esquema existente', value: 'resource' },
+      { name: 'Generar un nuevo orquestrador', value: 'orchestrator' },
       { name: 'Salir', value: 'exit' }
     ];
 

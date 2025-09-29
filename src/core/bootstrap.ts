@@ -2,7 +2,7 @@
 import { connectDB } from '@core/database/connection';
 import { Application } from 'express';
 import { Container } from './Container';
-// import { setupAllEventListeners } from '@api/events/event.listeners.setup';
+import { setupAllEventListeners } from '@api/eventsListeners/events/event.listeners.setup';
 import { createExpressApp } from '@core/createExpressApp';
 import { ILoggerService } from './services/LoggerService';
 import { registerAllDependencies } from './dependencies';
@@ -38,9 +38,9 @@ export async function bootstrap(): Promise<Application> {
     const app = createExpressApp();
     logger.info('Aplicación Express configurada');
     
-    // // 6. Configurar listeners después de que todos los servicios estén inicializados
-    // setupAllEventListeners();
-    // logger.info('Listeners de eventos configurados');
+    // 6. Configurar listeners después de que todos los servicios estén inicializados
+    setupAllEventListeners();
+    logger.info('Listeners de eventos configurados');
     
     return app;
   } catch (error) {
