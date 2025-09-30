@@ -24,26 +24,33 @@ export abstract class BaseService<
   }
 
   /**
-   * Obtiene todos los elementos que coinciden con el filtro
-   *
-   * ⚠️ ADVERTENCIA: Este método NO aplica límites de registros.
-   * Úsalo solo cuando sepas que la colección es un diccionario tipo opciones
-   * con un número de registros contenido (ej: configuraciones, catálogos pequeños).
-   * Para consultas generales, usa findPaginated() que incluye límites de seguridad.
-   *
-   * @param filter - Filtro base (normalmente de simpleSearch)
+   * Obtiene elementos de forma paginada
+   * @param filter - Filtro base => simpleSearch
+   * @param paginationParams - Parámetros de paginación
    * @param options - Opciones de consulta (ordenación, proyección)
    * @param advancedFilters - Filtros avanzados en formato JSON string
+   * @param permanentContextFilters - Filtros contextuales adicionales que siempre se aplican (string JSON o null)
    */
-  async getAll(
-    filter?: FilterQuery<TDocument>,
+  async findPaginated(
+    filter: FilterQuery<TDocument>,
+    paginationParams: IPaginationParams,
     options?: IQueryOptions,
-    advancedFilters?: string
-  ): Promise<TResponse[]> {
-    // El Repository ya aplica el filtro isDeleted automáticamente
-    const items = await this.repository.findAll(filter || {}, options, advancedFilters);
+    advancedFilters?: string,
+    permanentContextFilters?: string | null
+  ): Promise<IPaginatedResponse<TResponse>> {
 
-    return items as unknown as TResponse[];
+    const result = await this.repository.findPaginated(
+      filter,
+      paginationParams,
+      options,
+      advancedFilters,
+      permanentContextFilters
+    );
+
+    return {
+      ...result,
+      data: result.data as unknown as TResponse[]
+    };
   }
 
   /**
@@ -117,33 +124,6 @@ export abstract class BaseService<
       throw useNotFoundError(`Resource with _id ${_id} not found or could not be restored`);
     }
     return result as unknown as TResponse;
-  }
-
-  /**
-   * Obtiene elementos de forma paginada
-   * @param filter - Filtro base => simpleSearch
-   * @param paginationParams - Parámetros de paginación
-   * @param options - Opciones de consulta (ordenación, proyección)
-   * @param advancedFilters - Filtros avanzados en formato JSON string
-   */
-  async findPaginated(
-    filter: FilterQuery<TDocument>,
-    paginationParams: IPaginationParams,
-    options?: IQueryOptions,
-    advancedFilters?: string
-  ): Promise<IPaginatedResponse<TResponse>> {
-
-    const result = await this.repository.findPaginated(
-      filter,
-      paginationParams,
-      options,
-      advancedFilters
-    );
-
-    return {
-      ...result,
-      data: result.data as unknown as TResponse[]
-    };
   }
 
   /**

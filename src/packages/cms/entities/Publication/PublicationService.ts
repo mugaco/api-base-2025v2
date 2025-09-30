@@ -93,15 +93,15 @@ export class PublicationService extends BaseService<IPublication, IPublicationRe
       }
     }
     
-    // Obtener galería
+    // Obtener galería de imágenes
     if (publication.media_ids && publication.media_ids.length > 0) {
-      const galleryIds = publication.media_ids.map(id => id.toString());
+      const ides = publication.media_ids.map(id => id.toString());
       try {
-        result.gallery = await this.mediaService.getAll({
-          _id: { $in: galleryIds }
+        result.gallery = await this.mediaService.getMedias({
+          _id: { $in: ides }
         });
       } catch (error) {
-        this.logger.error('Error fetching gallery media', { error, galleryIds });
+        this.logger.error('Error fetching gallery media', { error, ides });
         // Si hay error obteniendo la galería, mantener array vacío
         result.gallery = [];
       }

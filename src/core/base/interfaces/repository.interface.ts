@@ -4,11 +4,6 @@ import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.inte
 import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
 
 export interface IRepository<T extends Document> {
-  findAll(
-    filter?: FilterQuery<T>,
-    options?: IQueryOptions,
-    advancedFilters?: string
-  ): Promise<T[]>;
   findById(_id: string): Promise<T | null>;
   findOne(filter: FilterQuery<T>): Promise<T | null>;
   create(data: Partial<T>, options?: { session?: ClientSession }): Promise<T>;
@@ -19,7 +14,8 @@ export interface IRepository<T extends Document> {
     filter: FilterQuery<T>,
     paginationParams: IPaginationParams,
     options?: IQueryOptions,
-    advancedFilters?: string
+    advancedFilters?: string,
+    permanentContextFilters?: string | null
   ): Promise<IPaginatedResponse<T>>;
   count(filter?: FilterQuery<T>): Promise<number>;
 }

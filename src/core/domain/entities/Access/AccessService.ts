@@ -24,18 +24,6 @@ export class AccessService extends BaseService<IAccess, IAccessBase, ICreateAcce
   }
 
   /**
-   * Sobrescribe getAll para aplicar transformación
-   */
-  async getAll(
-    query?: FilterQuery,
-    options?: IQueryOptions,
-    advancedFilters?: string
-  ): Promise<IAccessBase[]> {
-    const accesses = await super.getAll(query, options, advancedFilters);
-    return accesses.map(access => accessToResponse(access as unknown as IAccess));
-  }
-
-  /**
    * Sobrescribe findById para aplicar transformación
    */
   async findById(_id: string): Promise<IAccessBase> {

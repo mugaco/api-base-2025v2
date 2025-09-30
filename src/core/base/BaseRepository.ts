@@ -4,6 +4,7 @@ import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interf
 import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
 import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
 import { MongoQueryBuilder } from '@core/base/queryBuilder/MongoQueryBuilder';
+import { SecurityFilterSanitizer, ISanitizerOptions } from '@core/base/security/SecurityFilterSanitizer';
 import { ILoggerService } from '@core/services/LoggerService';
 import { useNotFoundError } from '@core/hooks/useError';
 
@@ -19,6 +20,9 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
   protected permanentFilters: FilterQuery<T> = {};
   protected logger: ILoggerService;
   protected activity: ActivityLog;
+  protected protectedFilterFields: string[] = ['isDeleted'];
+  protected allowedFilterFields?: Set<string>;
+  protected maxFilterDepth: number = 5;
 
   constructor(model: Model<T>, activity: ActivityLog, logger: ILoggerService) {
     this.activity = activity;
@@ -38,48 +42,92 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
   }
 
   /**
-   * Parsea filtros avanzados en formato string a un objeto de consulta MongoDB
+   * Sanitiza filtros removiendo campos protegidos y operadores peligrosos
    */
-  protected parseAdvancedFilters(filtersString: string | undefined): FilterQuery<T> {
+  protected sanitizeFilters(filter: FilterQuery<T>): FilterQuery<T> {
+    const options: ISanitizerOptions = {
+      allowedFields: this.allowedFilterFields,
+      customProtectedFields: this.protectedFilterFields,
+      logger: this.logger
+    };
+
+    const result = SecurityFilterSanitizer.sanitize<T>(filter, 0, options);
+
+    if (result.violations.length > 0) {
+      this.logger.warn('Filter sanitization violations detected', {
+        violations: result.violations,
+        modelName: this.model.modelName
+      });
+    }
+
+    return result.sanitized;
+  }
+
+  /**
+   * Parsea filtros avanzados en formato string a un objeto de consulta MongoDB
+   * @param filtersString - String JSON con los filtros
+   * @param shouldSanitize - Si true, sanitiza los filtros (por defecto true para filtros del usuario)
+   */
+  protected parseAdvancedFilters(filtersString: string | undefined, shouldSanitize: boolean = true): FilterQuery<T> {
     if (!filtersString) {
       return {};
     }
 
     try {
       const filtersObject = JSON.parse(filtersString);
-      const builder = new MongoQueryBuilder(filtersObject);
+
+      // Solo sanitizamos si es necesario (filtros del usuario)
+      const processedFilters = shouldSanitize
+        ? this.sanitizeFilters(filtersObject)
+        : filtersObject;
+
+      // Procesamos con MongoQueryBuilder
+      const builder = new MongoQueryBuilder(processedFilters);
       return builder.getQuery() as FilterQuery<T>;
     } catch (error) {
       this.logger.error('Error parsing advanced filters', {
         error: error instanceof Error ? error.message : String(error),
-        filtersString,
-        stack: error instanceof Error ? error.stack : undefined
+        // No logueamos el filtersString completo por seguridad
+        modelName: this.model.modelName
       });
       return {};
     }
   }
 
   /**
-   * Encuentra todos los documentos que cumplen con el filtro
-   * @param filter - Filtro base de MongoDB
+   * Encuentra documentos de forma paginada
+   * @param filter - Filtro base => simpleSearch
+   * @param paginationParams - Parámetros de paginación
    * @param options - Opciones de consulta (proyección, ordenamiento)
    * @param advancedFilters - Filtros avanzados en formato JSON string
+   * @param permanentContextFilters - Filtros contextuales adicionales que siempre se aplican (string JSON o null)
    */
-  async findAll(
+  async findPaginated(
     filter: FilterQuery<T> = {},
+    { page = 1, itemsPerPage = 10 }: IPaginationParams,
     options?: IQueryOptions,
-    advancedFilters?: string
-  ): Promise<T[]> {
-    // Procesar filtros avanzados si existen
+    advancedFilters?: string,
+    permanentContextFilters?: string | null
+  ): Promise<IPaginatedResponse<T>> {
+    // Procesar filtros avanzados del usuario (se sanitizan por defecto)
     const advancedQuery = advancedFilters
       ? this.parseAdvancedFilters(advancedFilters)
       : {};
-
+    // Procesar filtros de contexto del backend (NO se sanitizan - son confiables)
+    const permanentContextFiltersQuery = permanentContextFilters
+      ? this.parseAdvancedFilters(permanentContextFilters, false)
+      : {};
     // Combinar todos los filtros
     const combinedFilter = this.applyPermanentFilters({
       ...filter,
-      ...advancedQuery
+      ...advancedQuery,
+      ...permanentContextFiltersQuery
     });
+    // console.log('Combined Filter:', JSON.stringify(combinedFilter));
+    // Asegurar que page e itemsPerPage sean números válidos
+    const validPage = Math.max(1, page);
+    const validItemsPerPage = Math.max(1, itemsPerPage);
+    const skip = (validPage - 1) * validItemsPerPage;
 
     let query: Query<T[], T> = this.model.find(combinedFilter);
 
@@ -97,9 +145,38 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
 
       query = query.sort(sortObject);
     }
-    return query.exec();
-  }
 
+    // Aplicar limit explícitamente con el valor validado
+    const data = await query.skip(skip).limit(validItemsPerPage).exec();
+    const totalFilteredRows = await this.model.countDocuments(combinedFilter).exec();
+
+    // Para totalRows, solo consideramos isDeleted, ignorando otros filtros de búsqueda
+    const isDeletedFilter: FilterQuery<T> = {};
+
+    // Si se está filtrando por isDeleted, mantenemos ese filtro para totalRows
+    if ('isDeleted' in combinedFilter) {
+      (isDeletedFilter as Record<string, unknown>)['isDeleted'] = (combinedFilter as Record<string, unknown>)['isDeleted'];
+    }
+
+    // Combinamos isDeletedFilter con permanentFilters
+    const totalItemsFilter = this.applyPermanentFilters({
+      ...isDeletedFilter,
+      ...permanentContextFiltersQuery
+    });
+    // console.log('Total Items Filter:', JSON.stringify( totalItemsFilter));
+    const totalRows = await this.model.countDocuments(totalItemsFilter).exec();
+
+    return {
+      data,
+      pagination: {
+        page: validPage,
+        itemsPerPage: validItemsPerPage,
+        totalFilteredRows,
+        totalRows,
+        pages: Math.ceil(totalFilteredRows / validItemsPerPage)
+      }
+    };
+  }
   /**
    * Encuentra un documento por su ID
    */
@@ -294,79 +371,6 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
   }
 
   /**
-   * Encuentra documentos de forma paginada
-   * @param filter - Filtro base => simpleSearch
-   * @param paginationParams - Parámetros de paginación
-   * @param options - Opciones de consulta (proyección, ordenamiento)
-   * @param advancedFilters - Filtros avanzados en formato JSON string
-   */
-  async findPaginated(
-    filter: FilterQuery<T> = {},
-    { page = 1, itemsPerPage = 10 }: IPaginationParams,
-    options?: IQueryOptions,
-    advancedFilters?: string
-  ): Promise<IPaginatedResponse<T>> {
-    // Procesar filtros avanzados si existen
-    const advancedQuery = advancedFilters
-      ? this.parseAdvancedFilters(advancedFilters)
-      : {};
-
-    // Combinar todos los filtros
-    const combinedFilter = this.applyPermanentFilters({
-      ...filter,
-      ...advancedQuery
-    });
-    // Asegurar que page e itemsPerPage sean números válidos
-    const validPage = Math.max(1, page);
-    const validItemsPerPage = Math.max(1, itemsPerPage);
-    const skip = (validPage - 1) * validItemsPerPage;
-
-    let query: Query<T[], T> = this.model.find(combinedFilter);
-
-    if (options?.projection) {
-      query = query.select(options.projection) as unknown as Query<T[], T>;
-    }
-
-    if (options?.sortBy && options.sortBy.length > 0) {
-      const sortObject: Record<string, 1 | -1> = {};
-
-      options.sortBy.forEach((field, index) => {
-        const isDesc = options.sortDesc && options.sortDesc[index] === true;
-        sortObject[field] = isDesc ? -1 : 1;
-      });
-
-      query = query.sort(sortObject);
-    }
-
-    // Aplicar limit explícitamente con el valor validado
-    const data = await query.skip(skip).limit(validItemsPerPage).exec();
-    const totalFilteredRows = await this.model.countDocuments(combinedFilter).exec();
-
-    // Para totalRows, solo consideramos isDeleted, ignorando otros filtros de búsqueda
-    const isDeletedFilter: FilterQuery<T> = {};
-
-    // Si se está filtrando por isDeleted, mantenemos ese filtro para totalRows
-    if ('isDeleted' in filter) {
-      (isDeletedFilter as Record<string, unknown>)['isDeleted'] = (filter as Record<string, unknown>)['isDeleted'];
-    }
-
-    // Combinamos isDeletedFilter con permanentFilters
-    const totalItemsFilter = this.applyPermanentFilters(isDeletedFilter);
-    const totalRows = await this.model.countDocuments(totalItemsFilter).exec();
-
-    return {
-      data,
-      pagination: {
-        page: validPage,
-        itemsPerPage: validItemsPerPage,
-        totalFilteredRows,
-        totalRows,
-        pages: Math.ceil(totalFilteredRows / validItemsPerPage)
-      }
-    };
-  }
-
-  /**
    * Cuenta documentos que cumplen con el filtro
    */
   async count(filter: FilterQuery<T> = {}): Promise<number> {
@@ -374,9 +378,4 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
     return this.model.countDocuments(combinedFilter).exec();
   }
 
-  // Método getAllActive eliminado - su funcionalidad ya está cubierta por findAll
-  // que aplica automáticamente el filtro permanente isDeleted: false
-
-  // Los métodos findAllWithFilters y findPaginatedWithFilters han sido eliminados
-  // Su funcionalidad está ahora integrada en findAll y findPaginated con el parámetro opcional advancedFilters
 }

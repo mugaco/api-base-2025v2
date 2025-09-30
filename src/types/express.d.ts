@@ -8,6 +8,7 @@ declare global {
       user?: IAuthTokenPayload;
       scope?: Container;
       context?: IRequestContext;
+      permanentContextFilters?: string;
     }
   }
 }

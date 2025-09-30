@@ -7,17 +7,26 @@ import { ObjectId } from 'mongodb';
 /* eslint-disable */
 export class MongoQueryBuilder {
     private query: any = {};
+    private readonly MAX_RECURSION_DEPTH = 10;
 
     constructor(query: any) {
-        this.query = this.parseQuery(query);
+        this.query = this.parseQuery(query, 0);
     }
 
-    private parseQuery(query: any): any {
+    private parseQuery(query: any, depth: number = 0): any {
+        // Prevenir recursión infinita
+        if (depth > this.MAX_RECURSION_DEPTH) {
+            throw new Error(`Query depth exceeds maximum allowed depth of ${this.MAX_RECURSION_DEPTH}`);
+        }
+
         const parsedQuery: any = {};
 
         for (const key in query) {
             if (key === '$and' || key === '$or') {
-                parsedQuery[key] = query[key].map((condition: any) => this.parseQuery(condition));
+                if (!Array.isArray(query[key])) {
+                    throw new Error(`${key} operator requires an array value`);
+                }
+                parsedQuery[key] = query[key].map((condition: any) => this.parseQuery(condition, depth + 1));
             } else if (key === '$not') {
                 // MongoDB no soporta $not a nivel raíz de query
                 throw new Error('$not operator is not supported at query root level. Use it within field operators instead.');

@@ -20,14 +20,6 @@ export class AccessRepository extends BaseRepository<IAccess> {
     return this.findOne({ refreshtoken_id: refreshTokenId } as FilterQuery<IAccess>);
   }
 
-  async findActiveByUserId(userId: string): Promise<IAccess[]> {
-    return this.findAll({
-      user_id: userId,
-      is_revoked: false,
-      expiresAt: { $gt: new Date() }
-    } as FilterQuery<IAccess>);
-  }
-
   async revokeByRefreshTokenId(refreshTokenId: string): Promise<IAccess | null> {
     return this.model.findOneAndUpdate(
       { refreshtoken_id: refreshTokenId } as FilterQuery<IAccess>,

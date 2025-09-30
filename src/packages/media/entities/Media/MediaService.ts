@@ -60,4 +60,12 @@ export class MediaService extends BaseService<IMedia, IMedia, ICreateMedia, IUpd
       isDeleted: false
     });
   }
+  /**
+   * 
+   * @param query - Filtros de búsqueda
+   * @returns Lista de medios que coinciden con los filtros
+   */
+  getMedias(query: Record<string, unknown>): Promise<IMedia[]> {
+    return (this.repository as MediaRepository).findMedias(query);
+  }
 } 

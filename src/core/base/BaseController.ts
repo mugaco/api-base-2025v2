@@ -246,10 +246,15 @@ export abstract class BaseController<
   ): Promise<void> {
     const queryParams = req.query as unknown as IGetQueryParams;
     const filters = this.extractFilters(req);
-
     try {
       // Procesar simpleSearch si existe
       let simpleSearch: FilterQuery = {};
+      
+      let permanentContextFilters: string | null = null;
+      if (req.permanentContextFilters) {
+        permanentContextFilters = req.permanentContextFilters;
+      }
+    
       try {
         const simpleSearchQuery = this.processSimpleSearch(req);
         if (simpleSearchQuery) {
@@ -271,7 +276,8 @@ export abstract class BaseController<
           simpleSearch,
           paginationParams,
           options,
-          filters // Se pasa como parámetro opcional; es un string o undefined
+          filters, // Se pasa como parámetro opcional; es un string o undefined
+          permanentContextFilters // Filtros contextuales adicionales que siempre se aplican
         );
 
         this.sendSuccessResponse(res, result);
@@ -290,7 +296,8 @@ export abstract class BaseController<
           simpleSearch,
           safetyPaginationParams,
           options,
-          filters // Se pasa como parámetro opcional
+          filters, // Se pasa como parámetro opcional
+          permanentContextFilters // Filtros contextuales adicionales que siempre se aplican
         );
 
         // Respuesta con datos y mensaje informativo sobre el límite aplicado

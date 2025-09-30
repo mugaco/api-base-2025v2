@@ -17,18 +17,6 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
   }
 
   /**
-   * Sobrescribe getAll para aplicar transformación
-   */
-  async getAll(
-    query?: FilterQuery,
-    options?: IQueryOptions,
-    advancedFilters?: string
-  ): Promise<IUserResponse[]> {
-    const users = await super.getAll(query, options, advancedFilters);
-    return users.map(user => userToResponse(user as unknown as IUserModel));
-  }
-  
-  /**
    * Sobrescribe findById para aplicar transformación
    */
   async findById(_id: string): Promise<IUserResponse> {
