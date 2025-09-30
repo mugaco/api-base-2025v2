@@ -38,8 +38,8 @@ export abstract class BaseController<
    * Envía una respuesta de éxito
    */
   protected sendSuccessResponse(
-    res: Response, 
-    data: unknown, 
+    res: Response,
+    data: unknown,
     statusCode = 200
   ): void {
     // Detectar si es una respuesta paginada para corregir el formato
@@ -63,8 +63,8 @@ export abstract class BaseController<
    * Envía una respuesta de error
    */
   protected sendErrorResponse(
-    res: Response, 
-    message: string, 
+    res: Response,
+    message: string,
     statusCode = 400,
     errors?: unknown[]
   ): void {
@@ -84,13 +84,13 @@ export abstract class BaseController<
     // Obtener valores de la query
     const query = req.query as unknown as IGetQueryParams;
     const pageStr = query.page as unknown as string;
-    
+
     // Admitir diferentes formatos para el parámetro de items por página
-    const itemsPerPageStr = 
-      (query.itemsPerPage as unknown as string) || 
-      (query.items_per_page as unknown as string) || 
+    const itemsPerPageStr =
+      (query.itemsPerPage as unknown as string) ||
+      (query.items_per_page as unknown as string) ||
       (query['items-per-page'] as unknown as string);
-    
+
     // Parsear a números con validación
     let page = 1;
     if (pageStr !== undefined) {
@@ -98,7 +98,7 @@ export abstract class BaseController<
       // Asegurar que page sea un número válido mayor que 0
       page = !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : 1;
     }
-    
+
     // Usar constantes centralizadas
     const DEFAULT_ITEMS_PER_PAGE = PAGINATION_LIMITS.DEFAULT;
     const MAX_ITEMS_PER_PAGE = PAGINATION_LIMITS.MAX;
@@ -110,17 +110,17 @@ export abstract class BaseController<
       // Si el valor no es un número o es menor que 1, usar el valor por defecto
       if (isNaN(parsedItemsPerPage) || parsedItemsPerPage < 1) {
         itemsPerPage = DEFAULT_ITEMS_PER_PAGE;
-      } 
+      }
       // Si el valor supera el máximo permitido, lanzar un error
       else if (parsedItemsPerPage > MAX_ITEMS_PER_PAGE) {
         throw new Error(`El parámetro itemsPerPage no puede superar ${MAX_ITEMS_PER_PAGE}. Valor solicitado: ${parsedItemsPerPage}`);
-      } 
+      }
       // Si el valor es válido, usarlo
       else {
         itemsPerPage = parsedItemsPerPage;
       }
     }
-    
+
     return {
       page,
       itemsPerPage
@@ -133,7 +133,7 @@ export abstract class BaseController<
   protected extractQueryOptions(req: Request): IQueryOptions {
     const query = req.query as unknown as IGetQueryParams;
     const options: IQueryOptions = {};
-    
+
     // Procesar parámetros de ordenación si existen
     if (query.sortBy) {
       // Si es un string, intentar parsearlo como JSON si empieza por "[", de lo contrario tratarlo como string simple
@@ -153,7 +153,7 @@ export abstract class BaseController<
       } else if (Array.isArray(query.sortBy)) {
         options.sortBy = query.sortBy as string[];
       }
-      
+
       // Procesar dirección de ordenación
       if (query.sortDesc) {
         if (typeof query.sortDesc === 'string') {
@@ -163,7 +163,7 @@ export abstract class BaseController<
             if (sortDescStr.trim().startsWith('[')) {
               const parsedDesc = JSON.parse(sortDescStr);
               // Asegurar que son booleanos
-              options.sortDesc = Array.isArray(parsedDesc) 
+              options.sortDesc = Array.isArray(parsedDesc)
                 ? parsedDesc.map(item => String(item).toLowerCase() === 'true')
                 : [String(parsedDesc).toLowerCase() === 'true'];
             } else {
@@ -195,11 +195,8 @@ export abstract class BaseController<
   /**
    * Extrae los filtros de la solicitud HTTP
    */
-  protected extractFilters(req: Request): { filters?: string } {
-    const filters = req.query.filters;
-    return {
-      filters: filters as string
-    };
+  protected extractFilters(req: Request): string | undefined {
+    return req.query.filters as string | undefined;
   }
 
   /**
@@ -247,39 +244,36 @@ export abstract class BaseController<
     req: Request,
     res: Response
   ): Promise<void> {
-    // Consulta base vacía - solo usamos filters y simpleSearch
-    const baseQuery: FilterQuery = {};
     const queryParams = req.query as unknown as IGetQueryParams;
-    const filtersInfo = this.extractFilters(req);
+    const filters = this.extractFilters(req);
 
     try {
       // Procesar simpleSearch si existe
-      let finalQuery = baseQuery;
+      let simpleSearch: FilterQuery = {};
       try {
         const simpleSearchQuery = this.processSimpleSearch(req);
         if (simpleSearchQuery) {
-          // Combinar la consulta base con las condiciones de búsqueda simple
-          finalQuery = { ...baseQuery, ...simpleSearchQuery };
+          simpleSearch = simpleSearchQuery;
         }
       } catch (searchError) {
         const errorMessage = searchError instanceof Error ? searchError.message : 'Error processing search parameters';
         return this.sendErrorResponse(res, errorMessage, 400);
       }
-      
+
       // Verificar si se solicita paginación (si existe el parámetro page)
       if (queryParams.page !== undefined) {
         // Comportamiento de getPaginated
         const paginationParams = this.extractPaginationParams(req);
         const options = this.extractQueryOptions(req);
-        
+
         // Usar el método getPaginated unificado que maneja ambos casos
         const result = await this.service.getPaginated(
-          finalQuery,
+          simpleSearch,
           paginationParams,
           options,
-          filtersInfo.filters // Se pasa como parámetro opcional
+          filters // Se pasa como parámetro opcional; es un string o undefined
         );
-        
+
         this.sendSuccessResponse(res, result);
       } else {
         // Comportamiento de getAll pero con un límite de seguridad
@@ -290,15 +284,15 @@ export abstract class BaseController<
           itemsPerPage: MAX_ITEMS
         };
         const options = this.extractQueryOptions(req);
-        
+
         // Usar el método getPaginated unificado que maneja ambos casos
         const result = await this.service.getPaginated(
-          finalQuery,
+          simpleSearch,
           safetyPaginationParams,
           options,
-          filtersInfo.filters // Se pasa como parámetro opcional
+          filters // Se pasa como parámetro opcional
         );
-        
+
         // Respuesta con datos y mensaje informativo sobre el límite aplicado
         if (this.isPaginatedResponse(result)) {
           res.status(200).json({
@@ -328,11 +322,11 @@ export abstract class BaseController<
       // Capturar errores específicos de límite excedido
       if (error instanceof Error && error.message && error.message.includes('El parámetro itemsPerPage no puede superar')) {
         this.sendErrorResponse(
-          res, 
-          error.message, 
+          res,
+          error.message,
           400, // Bad Request
-          [{ 
-            field: 'itemsPerPage', 
+          [{
+            field: 'itemsPerPage',
             message: `El valor máximo permitido es 100. Utilice paginación para obtener más registros.`
           }]
         );
@@ -369,7 +363,7 @@ export abstract class BaseController<
     try {
       const _id = req.params._id;
       const item = await this.service.findById(_id);
-      
+
       this.sendSuccessResponse(res, item);
     } catch (error) {
       next(error);
@@ -380,7 +374,7 @@ export abstract class BaseController<
     try {
       const data = req.body;
       const newItem = await this.service.create(data);
-      
+
       this.sendSuccessResponse(res, newItem, 201);
     } catch (error) {
       next(error);
@@ -392,7 +386,7 @@ export abstract class BaseController<
       const _id = req.params._id;
       const data = req.body;
       const updatedItem = await this.service.update(_id, data);
-      
+
       this.sendSuccessResponse(res, updatedItem);
     } catch (error) {
       next(error);
@@ -417,7 +411,7 @@ export abstract class BaseController<
         return this.sendErrorResponse(res, 'Soft delete not supported', 404);
       }
       const item = await this.service.softDelete(_id);
-      
+
       this.sendSuccessResponse(res, item);
     } catch (error) {
       next(error);
@@ -431,25 +425,10 @@ export abstract class BaseController<
         return this.sendErrorResponse(res, 'Restore not supported', 404);
       }
       const item = await this.service.restore(_id);
-      
+
       this.sendSuccessResponse(res, item);
     } catch (error) {
       next(error);
     }
   };
-
-  getPaginated = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      // Solo usar filtros avanzados - no buildQuery
-      const paginationParams = this.extractPaginationParams(req);
-      const options = this.extractQueryOptions(req);
-
-      const result = await this.service.getPaginated({}, paginationParams, options);
-
-      this.sendSuccessResponse(res, result);
-    } catch (error) {
-      next(error);
-    }
-  };
-
 }
