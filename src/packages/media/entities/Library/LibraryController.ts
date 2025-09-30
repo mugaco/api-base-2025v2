@@ -90,13 +90,13 @@ export class LibraryController extends BaseController<LibraryService> {
     }
   };
 
-  getPaginated = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  findPaginated = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const query = this.buildQuery(req);
       const paginationParams = this.extractPaginationParams(req);
       const options = this.extractQueryOptions(req);
       
-      const result = await this.service.getPaginated(query, paginationParams, options);
+      const result = await this.service.findPaginated(query, paginationParams, options);
       
       // Transformar cada item a respuesta
       if (result && typeof result === 'object' && 'data' in result && Array.isArray((result as { data: ILibrary[] }).data)) {

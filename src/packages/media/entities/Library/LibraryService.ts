@@ -35,7 +35,7 @@ export class LibraryService extends BaseService<ILibrary, ILibrary, ICreateLibra
       isDeleted: false
     };
     
-    // Usar el método getPaginated del BaseService
-    return this.getPaginated(query, { page, itemsPerPage }, options);
+    // Usar el método findPaginated del BaseService
+    return this.findPaginated(query, { page, itemsPerPage }, options);
   }
 }

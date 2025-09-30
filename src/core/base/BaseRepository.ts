@@ -295,7 +295,7 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
 
   /**
    * Encuentra documentos de forma paginada
-   * @param filter - Filtro base de MongoDB
+   * @param filter - Filtro base => simpleSearch
    * @param paginationParams - Parámetros de paginación
    * @param options - Opciones de consulta (proyección, ordenamiento)
    * @param advancedFilters - Filtros avanzados en formato JSON string
@@ -316,7 +316,6 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
       ...filter,
       ...advancedQuery
     });
-
     // Asegurar que page e itemsPerPage sean números válidos
     const validPage = Math.max(1, page);
     const validItemsPerPage = Math.max(1, itemsPerPage);

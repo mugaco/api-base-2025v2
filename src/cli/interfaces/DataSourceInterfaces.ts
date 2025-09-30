@@ -53,7 +53,7 @@ export interface RoutesMiddlewares {
   create: RouteMiddlewareConfig;
   update: RouteMiddlewareConfig;
   delete: RouteMiddlewareConfig;
-  getPaginated: RouteMiddlewareConfig;
+  findPaginated: RouteMiddlewareConfig;
   [key: string]: RouteMiddlewareConfig; // Permitir indexación por string
 }
 

@@ -16,7 +16,7 @@ export abstract class BaseService<
   TCreateDTO = Partial<TDocument>,
   TUpdateDTO = Partial<TDocument>
 > implements IService<TResponse, TCreateDTO, TUpdateDTO> {
-  
+
   protected repository: IExtendedRepository<TDocument>;
 
   constructor(repository: IExtendedRepository<TDocument>) {
@@ -29,7 +29,7 @@ export abstract class BaseService<
    * ⚠️ ADVERTENCIA: Este método NO aplica límites de registros.
    * Úsalo solo cuando sepas que la colección es un diccionario tipo opciones
    * con un número de registros contenido (ej: configuraciones, catálogos pequeños).
-   * Para consultas generales, usa getPaginated() que incluye límites de seguridad.
+   * Para consultas generales, usa findPaginated() que incluye límites de seguridad.
    *
    * @param filter - Filtro base (normalmente de simpleSearch)
    * @param options - Opciones de consulta (ordenación, proyección)
@@ -121,18 +121,18 @@ export abstract class BaseService<
 
   /**
    * Obtiene elementos de forma paginada
-   * @param filter - Filtro base (normalmente de simpleSearch)
+   * @param filter - Filtro base => simpleSearch
    * @param paginationParams - Parámetros de paginación
    * @param options - Opciones de consulta (ordenación, proyección)
    * @param advancedFilters - Filtros avanzados en formato JSON string
    */
-  async getPaginated(
+  async findPaginated(
     filter: FilterQuery<TDocument>,
     paginationParams: IPaginationParams,
     options?: IQueryOptions,
     advancedFilters?: string
   ): Promise<IPaginatedResponse<TResponse>> {
-    // El Repository ya aplica el filtro isDeleted automáticamente
+
     const result = await this.repository.findPaginated(
       filter,
       paginationParams,
@@ -155,11 +155,5 @@ export abstract class BaseService<
     return this.repository.count(filter || {});
   }
 
-  // Método getAllActive eliminado - findAll ya aplica automáticamente isDeleted: false
-  // a través de los permanentFilters del Repository
-
-  // Los métodos getAllWithFilters y getPaginatedWithFilters se han unificado
-  // en getAll y getPaginated para evitar duplicidad y garantizar consistencia
-  // en el filtrado de isDeleted
 
 }

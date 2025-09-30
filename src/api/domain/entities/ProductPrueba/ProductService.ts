@@ -28,7 +28,7 @@ export class ProductService extends BaseService<
   // - create
   // - update
   // - delete
-  // - getPaginated
+  // - findPaginated
   // - softDelete (si está habilitado)
   // - restore (si está habilitado)
   // - search

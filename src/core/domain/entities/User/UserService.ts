@@ -79,15 +79,15 @@ export class UserService extends BaseService<IUserModel, IUserResponse, ICreateU
   }
   
   /**
-   * Sobrescribe getPaginated para aplicar transformación
+   * Sobrescribe findPaginated para aplicar transformación
    */
-  async getPaginated(
+  async findPaginated(
     filter: FilterQuery = {},
     paginationParams: IPaginationParams,
     options?: IQueryOptions,
     advancedFilters?: string
   ): Promise<IPaginatedResponse<IUserResponse>> {
-    const paginatedResult = await super.getPaginated(
+    const paginatedResult = await super.findPaginated(
       filter,
       paginationParams,
       options,

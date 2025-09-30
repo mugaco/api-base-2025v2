@@ -49,8 +49,8 @@ export class CategoryService extends BaseService<ICategory, ICategoryResponse, I
       ]
     };
 
-    // Usar el método getPaginated heredado de BaseService
-    const result = await this.getPaginated(query, paginationParams, options);
+    // Usar el método findPaginated heredado de BaseService
+    const result = await this.findPaginated(query, paginationParams, options);
 
     return result;
   }

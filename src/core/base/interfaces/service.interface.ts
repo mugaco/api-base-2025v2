@@ -16,7 +16,7 @@ export interface IService<T, CreateDTO, UpdateDTO> {
   delete(_id: string): Promise<boolean>;
   softDelete?(_id: string): Promise<T>;
   restore?(_id: string): Promise<T>;
-  getPaginated(
+  findPaginated(
     query: FilterQuery,
     paginationParams: IPaginationParams,
     options?: IQueryOptions,

@@ -262,12 +262,12 @@ export abstract class BaseController<
 
       // Verificar si se solicita paginación (si existe el parámetro page)
       if (queryParams.page !== undefined) {
-        // Comportamiento de getPaginated
+        // Comportamiento de findPaginated
         const paginationParams = this.extractPaginationParams(req);
         const options = this.extractQueryOptions(req);
 
-        // Usar el método getPaginated unificado que maneja ambos casos
-        const result = await this.service.getPaginated(
+        // Usar el método findPaginated unificado que maneja ambos casos
+        const result = await this.service.findPaginated(
           simpleSearch,
           paginationParams,
           options,
@@ -285,8 +285,8 @@ export abstract class BaseController<
         };
         const options = this.extractQueryOptions(req);
 
-        // Usar el método getPaginated unificado que maneja ambos casos
-        const result = await this.service.getPaginated(
+        // Usar el método findPaginated unificado que maneja ambos casos
+        const result = await this.service.findPaginated(
           simpleSearch,
           safetyPaginationParams,
           options,

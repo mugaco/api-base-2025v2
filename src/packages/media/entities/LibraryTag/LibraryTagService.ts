@@ -33,7 +33,7 @@ export class LibraryTagService extends BaseService<ILibraryTag, ILibraryTag, ICr
       isDeleted: false
     };
     
-    // Usar el método getPaginated del BaseService
-    return this.getPaginated(query, { page, itemsPerPage }, options);
+    // Usar el método findPaginated del BaseService
+    return this.findPaginated(query, { page, itemsPerPage }, options);
   }
 } 
