@@ -10,7 +10,6 @@ import {
   LoginSchema,
   RefreshTokenSchema,
   LogoutSchema,
-  LogoutAllSchema,
   ForgotPasswordSchema,
   ResetPasswordSchema
 } from '../../entities/Access';
@@ -63,16 +62,6 @@ router.post(
   (req: Request, res: Response, next: NextFunction) => {
     const controller = getAuthController(req);
     controller.logout(req, res, next);
-  }
-);
-
-// POST /api/auth/logout-all - Cerrar todas las sesiones
-router.post(
-  '/logout-all',
-  validateZodSchema(LogoutAllSchema),
-  (req: Request, res: Response, next: NextFunction) => {
-    const controller = getAuthController(req);
-    controller.logoutAll(req, res, next);
   }
 );
 

@@ -29,6 +29,10 @@ const AccessSchema = new Schema<IAccess>(
       type: String,
       required: true
     },
+        isDeleted: {
+      type: Boolean,
+      default: false,
+    },
     is_revoked: {
       type: Boolean,
       default: false

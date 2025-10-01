@@ -22,6 +22,7 @@ export const AccessBaseSchema = z.object({
   origin: z.string().optional(),
   agent: z.string().optional(),
   refreshtoken_id: z.string(),
+  isDeleted: z.boolean().default(false),
   is_revoked: z.boolean().default(false),
   expiresAt: z.date(),
   createdAt: z.date().optional(),
@@ -60,7 +61,7 @@ export type ILogout = z.infer<typeof LogoutSchema>;
 
 // Esquema para logout all
 export const LogoutAllSchema = z.object({
-  userId: z.string().min(1, 'El ID de usuario es obligatorio')
+  user_id: z.string().min(1, 'El ID de usuario es obligatorio')
 });
 
 export type ILogoutAll = z.infer<typeof LogoutAllSchema>;
@@ -188,6 +189,7 @@ export const accessToResponse = (access: unknown): IAccess => {
     origin: typeof accessObj.origin === 'string' ? accessObj.origin : '',
     agent: typeof accessObj.agent === 'string' ? accessObj.agent : '',
     refreshtoken_id: typeof accessObj.refreshtoken_id === 'string' ? accessObj.refreshtoken_id : '',
+    isDeleted: typeof accessObj.isDeleted === 'boolean' ? accessObj.isDeleted : false,
     is_revoked: typeof accessObj.is_revoked === 'boolean' ? accessObj.is_revoked : false,
     expiresAt: accessObj.expiresAt instanceof Date ? accessObj.expiresAt : new Date(),
     createdAt: accessObj.createdAt instanceof Date ? accessObj.createdAt : new Date(),

@@ -73,24 +73,6 @@ export class AuthController {
   };
 
   /**
-   * Cerrar todas las sesiones
-   */
-  logoutAll = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { userId } = req.body;
-      
-      await this.authOrchestrator.logoutAll(userId);
-      
-      res.status(200).json({
-        status: 'success',
-        message: 'Todas las sesiones han sido cerradas'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
    * Solicitar recuperación de contraseña
    */
   forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

@@ -148,14 +148,6 @@ export class AuthOrchestrator {
   }
 
   /**
-   * Cerrar todas las sesiones de un usuario
-   */
-  async logoutAll(userId: string): Promise<boolean> {
-    await this.accessService.revokeAllForUser(userId);
-    return true;
-  }
-
-  /**
    * Solicitar recuperación de contraseña
    */
   async forgotPassword(data: IForgotPassword): Promise<IForgotPasswordResponse> {
