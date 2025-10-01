@@ -3,7 +3,7 @@ import { IExtendedRepository } from '@core/base/interfaces/repository.interface'
 import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interface';
 import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
 import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
-import { MongoQueryBuilder } from '@core/base/queryBuilder/MongoQueryBuilder';
+import { MongoQueryBuilder, IMongoQueryBuilderOptions } from '@core/base/queryBuilder/MongoQueryBuilder';
 import { SecurityFilterSanitizer, ISanitizerOptions } from '@core/base/queryBuilder/SecurityFilterSanitizer';
 import { ILoggerService } from '@core/services/LoggerService';
 import { useNotFoundError } from '@core/hooks/useError';
@@ -23,15 +23,19 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
   protected protectedFilterFields: string[] = ['isDeleted'];
   protected allowedFilterFields?: Set<string>;
   protected maxFilterDepth: number = 5;
+  private queryBuilder: MongoQueryBuilder;
 
   constructor(model: Model<T>, activity: ActivityLog, logger: ILoggerService) {
     this.activity = activity;
-
     this.model = model;
-    // Resolver el logger en el constructor, no a nivel de módulo
     this.logger = logger;
     // Configurar filtro permanente para excluir elementos eliminados lógicamente
     this.permanentFilters = { isDeleted: false } as FilterQuery<T>;
+    // Inicializar query builder con opciones
+    const builderOptions: IMongoQueryBuilderOptions = {
+      maxRecursionDepth: this.maxFilterDepth
+    };
+    this.queryBuilder = new MongoQueryBuilder(builderOptions);
   }
 
   /**
@@ -48,7 +52,8 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
     const options: ISanitizerOptions = {
       allowedFields: this.allowedFilterFields,
       customProtectedFields: this.protectedFilterFields,
-      logger: this.logger
+      logger: this.logger,
+      maxDepth: this.maxFilterDepth
     };
 
     const result = SecurityFilterSanitizer.sanitize<T>(filter, 0, options);
@@ -65,7 +70,7 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
 
   /**
    * Parsea filtros avanzados en formato string a un objeto de consulta MongoDB
-   * @param filtersString - String JSON con los filtros
+   * @param filtersString - String JSON con los filtros DSL
    * @param shouldSanitize - Si true, sanitiza los filtros (por defecto true para filtros del usuario)
    */
   protected parseAdvancedFilters(filtersString: string | undefined, shouldSanitize: boolean = true): FilterQuery<T> {
@@ -81,13 +86,12 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
         ? this.sanitizeFilters(filtersObject)
         : filtersObject;
 
-      // Procesamos con MongoQueryBuilder
-      const builder = new MongoQueryBuilder(processedFilters);
-      return builder.getQuery() as FilterQuery<T>;
+      // Procesamos con el nuevo MongoQueryBuilder DSL-only
+      const mongoQuery = this.queryBuilder.build(processedFilters);
+      return mongoQuery as FilterQuery<T>;
     } catch (error) {
       this.logger.error('Error parsing advanced filters', {
         error: error instanceof Error ? error.message : String(error),
-        // No logueamos el filtersString completo por seguridad
         modelName: this.model.modelName
       });
       return {};
@@ -179,11 +183,14 @@ export abstract class BaseRepository<T extends Document> implements IExtendedRep
   }
   /**
    * Encuentra un documento por su ID
+   * Aplica el filtro isDeleted para consistencia con otras operaciones
    */
   async findById(_id: string): Promise<T | null> {
     this.activity.push({ model: this.model.modelName, id: _id });
 
-    return this.model.findById(_id).exec();
+    // Aplicar filtros permanentes para consistencia (isDeleted: false)
+    const filter = this.applyPermanentFilters({ _id } as FilterQuery<T>);
+    return this.model.findOne(filter).exec();
   }
 
   /**

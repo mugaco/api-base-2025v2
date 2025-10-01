@@ -7,6 +7,11 @@ import { IController } from '@core/base/interfaces/controller.interface';
 import { IService, FilterQuery } from '@core/base/interfaces/service.interface';
 import { PAGINATION_LIMITS } from '@core/base/constants';
 
+// Helper para escapar caracteres especiales en regex
+const escapeRegex = (str: string): string => {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 /**
  * Clase base abstracta para controladores
  * Proporciona operaciones comunes utilizando herencia
@@ -200,8 +205,9 @@ export abstract class BaseController<
   }
 
   /**
-   * Procesa el parámetro simpleSearch para construir condiciones de búsqueda
+   * Procesa el parámetro simpleSearch para construir condiciones de búsqueda seguras
    * Formato esperado: { search: "término de búsqueda", fields: ["campo1", "campo2"] }
+   * SEGURIDAD: Escapa caracteres especiales de regex para prevenir ReDoS
    */
   protected processSimpleSearch(req: Request): FilterQuery | null {
     try {
@@ -218,10 +224,19 @@ export abstract class BaseController<
         throw new Error('Formato inválido para simpleSearch. El formato correcto es: {"search":"término","fields":["campo1","campo2"]}');
       }
 
-      // Construir condiciones de búsqueda
+      // Validar longitud del término de búsqueda
+      const searchTerm = String(simpleSearch.search);
+      if (searchTerm.length > 200) {
+        throw new Error('Término de búsqueda demasiado largo (máximo 200 caracteres)');
+      }
+
+      // SEGURIDAD: Escapar caracteres especiales de regex
+      const escapedSearch = escapeRegex(searchTerm);
+
+      // Construir condiciones de búsqueda con regex segura
       return {
         $or: simpleSearch.fields.map((field: string) => ({
-          [field]: { $regex: simpleSearch.search, $options: 'i' }
+          [field]: { $regex: escapedSearch, $options: 'i' }
         }))
       };
     } catch (error) {
