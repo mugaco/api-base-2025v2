@@ -4,7 +4,7 @@ import { IPaginationParams } from '@core/base/interfaces/PaginationParams.interf
 import { IPaginatedResponse } from '@core/base/interfaces/PaginatedResponse.interface';
 import { IQueryOptions } from '@core/base/interfaces/QueryOptions.interface';
 import { MongoQueryBuilder } from '@core/base/queryBuilder/MongoQueryBuilder';
-import { SecurityFilterSanitizer, ISanitizerOptions } from '@core/base/security/SecurityFilterSanitizer';
+import { SecurityFilterSanitizer, ISanitizerOptions } from '@core/base/queryBuilder/SecurityFilterSanitizer';
 import { ILoggerService } from '@core/services/LoggerService';
 import { useNotFoundError } from '@core/hooks/useError';
 
