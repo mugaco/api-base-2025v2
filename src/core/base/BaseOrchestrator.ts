@@ -7,7 +7,11 @@ import { ClientSession, startSession } from 'mongoose';
 export abstract class BaseOrchestrator {
   /**
    * Ejecuta una operación dentro de una transacción MongoDB
-   * Maneja automáticamente el inicio, commit/rollback y cierre de la sesión
+   * Maneja automáticamente:
+   * - Inicio y cierre de la sesión
+   * - Commit/rollback de la transacción
+   * - Reintentos automáticos para errores transitorios (TransientTransactionError)
+   * - Reintentos de commit cuando el resultado es desconocido (UnknownTransactionCommitResult)
    *
    * @param operation - Función que recibe la sesión y ejecuta las operaciones
    * @returns Promise con el resultado de la operación
@@ -29,15 +33,20 @@ export abstract class BaseOrchestrator {
     const session = await startSession();
 
     try {
-      session.startTransaction();
-      const result = await operation(session);
-      await session.commitTransaction();
-      return result;
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
+      const txOptions = {
+        readPreference: 'primary' as const,
+        readConcern: { level: 'snapshot' as const },
+        writeConcern: { w: 'majority' as const },
+      };
+
+      // session.withTransaction maneja automáticamente los reintentos para:
+      // - TransientTransactionError: reintenta toda la transacción
+      // - UnknownTransactionCommitResult: reintenta el commit
+      return await session.withTransaction(async () => {
+        return operation(session);
+      }, txOptions);
     } finally {
-      session.endSession();
+      await session.endSession();
     }
   }
 }
